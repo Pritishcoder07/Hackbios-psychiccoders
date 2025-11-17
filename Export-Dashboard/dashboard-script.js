@@ -3208,6 +3208,268 @@ function parseListInput(value = '') {
 }
 
 // ============================================
+// ANALYTICS MODULE
+// ============================================
+
+let analyticsInitialized = false;
+
+function initializeAnalyticsModule() {
+    if (analyticsInitialized) return;
+
+    const refreshBtn = document.getElementById('analyticsRefreshBtn');
+    if (refreshBtn) {
+        refreshBtn.addEventListener('click', () => loadAnalyticsFromFirebase(true));
+    }
+
+    analyticsInitialized = true;
+    setTimeout(() => {
+        loadAnalyticsFromFirebase();
+    }, 200);
+}
+
+async function loadAnalyticsFromFirebase(fromRefreshButton = false) {
+    const loadingEl = document.getElementById('analyticsLoading');
+    const emptyEl = document.getElementById('analyticsEmpty');
+    const contentEl = document.getElementById('analyticsContent');
+
+    if (!loadingEl || !emptyEl || !contentEl) return;
+
+    loadingEl.style.display = 'flex';
+    emptyEl.style.display = 'none';
+    contentEl.style.display = 'none';
+
+    const user = auth?.currentUser;
+    if (!user || !database) {
+        loadingEl.style.display = 'none';
+        emptyEl.style.display = 'flex';
+        emptyEl.querySelector('p').textContent = 'Please login to view analytics.';
+        return;
+    }
+
+    try {
+        const snapshot = await database.ref(`users/${user.uid}`).once('value');
+        const userData = snapshot.val() || {};
+        const productsData = userData.products || {};
+        const documentsData = userData.documents || {};
+
+        const products = Object.entries(productsData).map(([id, product]) => ({
+            id,
+            ...product
+        }));
+
+        const documentTypes = collectDocumentTypes(documentsData);
+        const productCount = products.length;
+        const documentCount = documentTypes.length;
+        const hasData = productCount > 0 || documentCount > 0;
+
+        if (!hasData) {
+            emptyEl.style.display = 'flex';
+            emptyEl.querySelector('p').textContent = 'Add products or documents to unlock analytics.';
+            contentEl.style.display = 'none';
+            return;
+        }
+
+        const metrics = buildAnalyticsMetrics(products, documentTypes, userData);
+        renderAnalytics(metrics);
+        emptyEl.style.display = 'none';
+        contentEl.style.display = 'flex';
+    } catch (error) {
+        console.error('Error loading analytics:', error);
+        emptyEl.style.display = 'flex';
+        emptyEl.querySelector('p').textContent = 'Unable to load analytics right now. Please try again.';
+    } finally {
+        loadingEl.style.display = 'none';
+    }
+}
+
+function buildAnalyticsMetrics(products = [], documentTypes = [], userData = {}) {
+    const priceEntries = [];
+    const incotermCounts = {};
+    const marketEntries = [];
+    const certificationEntries = [];
+
+    products.forEach((product) => {
+        const priceValue = Number(product.priceValue);
+        const currency = (product.priceCurrency || 'USD').toUpperCase();
+        if (Number.isFinite(priceValue)) {
+            priceEntries.push({ amount: priceValue, currency });
+        }
+
+        const incoterm = (product.incoterm || 'UNSPECIFIED').toUpperCase();
+        incotermCounts[incoterm] = (incotermCounts[incoterm] || 0) + 1;
+
+        parseListInput(product.targetMarkets).forEach((market) => {
+            if (!market) return;
+            marketEntries.push(market);
+        });
+
+        parseListInput(product.certifications).forEach((cert) => {
+            if (!cert) return;
+            certificationEntries.push(cert);
+        });
+    });
+
+    const priceSummary = summarizePrices(priceEntries);
+    const markets = summarizeList(marketEntries, 5);
+    const incoterms = Object.entries(incotermCounts)
+        .map(([name, count]) => ({ name, count }))
+        .sort((a, b) => b.count - a.count)
+        .slice(0, 5);
+
+    const recentProducts = [...products]
+        .sort((a, b) => {
+            const dateA = new Date(a.updatedAt || a.createdAt || 0);
+            const dateB = new Date(b.updatedAt || b.createdAt || 0);
+            return dateB - dateA;
+        })
+        .slice(0, 4)
+        .map((product) => ({
+            name: product.name || 'Untitled Product',
+            incoterm: (product.incoterm || 'Unspecified').toUpperCase(),
+            updatedAt: formatProductDate(product.updatedAt || product.createdAt)
+        }));
+
+    const complianceStatus = documentTypes.length >= 3
+        ? 'Documents look healthy'
+        : 'Add more compliance docs';
+
+    return {
+        productCount: products.length,
+        documentCount: documentTypes.length,
+        catalogValueLabel: priceSummary.catalogValue,
+        avgPriceLabel: priceSummary.avgPrice,
+        priceRangeLabel: priceSummary.range,
+        topIncotermLabel: incoterms[0]?.name || 'Add incoterms',
+        complianceStatus,
+        documentCoverageLabel: documentTypes.length ? `${documentTypes.length} document type(s)` : 'No documents yet',
+        markets,
+        incoterms,
+        documentTypes,
+        recentProducts,
+        lastRefreshed: new Date()
+    };
+}
+
+function renderAnalytics(data) {
+    const setText = (id, text) => {
+        const el = document.getElementById(id);
+        if (el) el.textContent = text;
+    };
+
+    setText('analyticsProductCount', data.productCount);
+    setText('analyticsDocumentCount', data.documentCount);
+    setText('analyticsCatalogValue', `Catalog value: ${data.catalogValueLabel}`);
+    setText('analyticsAvgPrice', data.avgPriceLabel);
+    setText('analyticsPriceRange', `Range: ${data.priceRangeLabel}`);
+    setText('analyticsTopIncoterm', data.topIncotermLabel);
+    setText('analyticsComplianceStatus', data.complianceStatus);
+    setText('analyticsDocumentCoverage', data.documentCoverageLabel);
+
+    const timestampEl = document.getElementById('analyticsLastRefreshed');
+    if (timestampEl && data.lastRefreshed) {
+        timestampEl.textContent = `Updated ${data.lastRefreshed.toLocaleString()}`;
+    }
+
+    renderAnalyticsList('analyticsMarketList', data.markets, (item) =>
+        `<li><strong>${escapeHTML(item.name)}</strong><span>${item.count} listing${item.count === 1 ? '' : 's'}</span></li>`
+    );
+
+    renderAnalyticsList('analyticsIncotermList', data.incoterms, (item) =>
+        `<li><strong>${escapeHTML(item.name)}</strong><span>${item.count} listing${item.count === 1 ? '' : 's'}</span></li>`
+    );
+
+    renderAnalyticsList('analyticsDocumentList', data.documentTypes, (item) => {
+        const label = documentTypeMap[item]?.name || item;
+        return `<li><strong>${escapeHTML(label)}</strong><span>On file</span></li>`;
+    });
+
+    renderAnalyticsList('analyticsRecentProducts', data.recentProducts, (item) =>
+        `<li><strong>${escapeHTML(item.name)}</strong><span>${escapeHTML(item.updatedAt)} · ${escapeHTML(item.incoterm)}</span></li>`
+    );
+}
+
+function renderAnalyticsList(elementId, rows, template) {
+    const el = document.getElementById(elementId);
+    if (!el) return;
+
+    if (!rows || !rows.length) {
+        el.innerHTML = '<li><strong>—</strong><span>No data yet</span></li>';
+        return;
+    }
+
+    el.innerHTML = rows.map(template).join('');
+}
+
+function summarizePrices(entries = []) {
+    if (!entries.length) {
+        return {
+            catalogValue: '—',
+            avgPrice: '—',
+            range: '—'
+        };
+    }
+
+    const currencySet = new Set(entries.map(item => item.currency));
+    if (currencySet.size > 1) {
+        return {
+            catalogValue: 'Multi-currency catalog',
+            avgPrice: 'Mixed currencies',
+            range: 'Mixed currencies'
+        };
+    }
+
+    const currency = entries[0].currency;
+    const amounts = entries.map(item => item.amount);
+    const total = amounts.reduce((sum, value) => sum + value, 0);
+    const avg = total / amounts.length;
+    const min = Math.min(...amounts);
+    const max = Math.max(...amounts);
+
+    return {
+        catalogValue: formatCurrencyValue(total, currency),
+        avgPrice: formatCurrencyValue(avg, currency),
+        range: `${formatCurrencyValue(min, currency)} – ${formatCurrencyValue(max, currency)}`
+    };
+}
+
+function summarizeList(items = [], limit = 5) {
+    const counts = {};
+    items.forEach(item => {
+        const key = item || 'Unspecified';
+        counts[key] = (counts[key] || 0) + 1;
+    });
+
+    return Object.entries(counts)
+        .map(([name, count]) => ({ name, count }))
+        .sort((a, b) => b.count - a.count)
+        .slice(0, limit);
+}
+
+function formatCurrencyValue(amount, currency = 'USD') {
+    if (!Number.isFinite(amount)) return '—';
+    try {
+        return new Intl.NumberFormat('en-US', {
+            style: 'currency',
+            currency,
+            maximumFractionDigits: 2
+        }).format(amount);
+    } catch (error) {
+        return `${currency} ${amount.toFixed(2)}`;
+    }
+}
+
+function collectDocumentTypes(documents = {}) {
+    const types = new Set();
+    Object.keys(documents).forEach((key) => {
+        if (key.endsWith('FileName') || key.endsWith('FileType')) return;
+        const value = documents[key];
+        if (!value) return;
+        types.add(key);
+    });
+    return Array.from(types);
+}
+
+// ============================================
 // DOCUMENTS MODULE
 // ============================================
 
@@ -4351,6 +4613,7 @@ document.addEventListener('DOMContentLoaded', () => {
     setTimeout(() => {
         initializeDocumentsModule();
         initializeProductModule();
+        initializeAnalyticsModule();
         
         const originalSwitchTab = window.switchTab;
         window.switchTab = function(tabName) {
@@ -4363,6 +4626,10 @@ document.addEventListener('DOMContentLoaded', () => {
             if (tabName === 'products') {
                 loadProductsFromFirebase();
             }
+
+            if (tabName === 'analytics') {
+                loadAnalyticsFromFirebase();
+            }
         };
         
         const initialTab = window.location.hash.substring(1);
@@ -4370,6 +4637,8 @@ document.addEventListener('DOMContentLoaded', () => {
             loadDocumentsFromFirebase();
         } else if (initialTab === 'products') {
             loadProductsFromFirebase();
+        } else if (initialTab === 'analytics') {
+            loadAnalyticsFromFirebase();
         }
     }, 100);
 });

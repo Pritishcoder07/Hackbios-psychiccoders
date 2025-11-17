@@ -643,8 +643,82 @@
                 </div>
 
                 <div class="content-section" id="analyticsSection" style="display: none;">
-                    <h2>Analytics</h2>
-                    <p>View your export analytics and reports.</p>
+                    <div class="analytics-header">
+                        <div>
+                            <h2>Analytics Command Center</h2>
+                            <p>Track product readiness, document coverage, and export focus based on your live data.</p>
+                        </div>
+                        <div class="analytics-header-actions">
+                            <span class="analytics-timestamp" id="analyticsLastRefreshed">Waiting for first refresh…</span>
+                            <button type="button" class="btn-secondary" id="analyticsRefreshBtn">Refresh data</button>
+                        </div>
+                    </div>
+
+                    <div id="analyticsLoading" class="analytics-loading" style="display: none;">
+                        <div class="loading-spinner"></div>
+                        <p>Generating insights from Firebase…</p>
+                    </div>
+
+                    <div id="analyticsEmpty" class="analytics-empty">
+                        <div class="empty-icon">📊</div>
+                        <h3>No analytics yet</h3>
+                        <p>Add products or documents to unlock tailored insights.</p>
+                    </div>
+
+                    <div id="analyticsContent" class="analytics-content" style="display: none;">
+                        <div class="analytics-stats-grid">
+                            <article class="analytics-stat-card">
+                                <span>Total Products</span>
+                                <strong id="analyticsProductCount">0</strong>
+                                <p id="analyticsCatalogValue">Catalog value: —</p>
+                            </article>
+                            <article class="analytics-stat-card">
+                                <span>Documents on File</span>
+                                <strong id="analyticsDocumentCount">0</strong>
+                                <p id="analyticsDocumentCoverage">Coverage: —</p>
+                            </article>
+                            <article class="analytics-stat-card">
+                                <span>Average Offer Price</span>
+                                <strong id="analyticsAvgPrice">—</strong>
+                                <p id="analyticsPriceRange">Range: —</p>
+                            </article>
+                            <article class="analytics-stat-card">
+                                <span>Top Incoterm</span>
+                                <strong id="analyticsTopIncoterm">—</strong>
+                                <p id="analyticsComplianceStatus">Compliance: —</p>
+                            </article>
+                        </div>
+
+                        <div class="analytics-panels-grid">
+                            <section class="analytics-panel">
+                                <div class="analytics-panel-header">
+                                    <h3>Target Market Focus</h3>
+                                </div>
+                                <ul id="analyticsMarketList" class="analytics-list"></ul>
+                            </section>
+
+                            <section class="analytics-panel">
+                                <div class="analytics-panel-header">
+                                    <h3>Incoterms & Capacity</h3>
+                                </div>
+                                <ul id="analyticsIncotermList" class="analytics-list"></ul>
+                            </section>
+
+                            <section class="analytics-panel">
+                                <div class="analytics-panel-header">
+                                    <h3>Document Coverage</h3>
+                                </div>
+                                <ul id="analyticsDocumentList" class="analytics-list"></ul>
+                            </section>
+
+                            <section class="analytics-panel">
+                                <div class="analytics-panel-header">
+                                    <h3>Recent Product Updates</h3>
+                                </div>
+                                <ul id="analyticsRecentProducts" class="analytics-list"></ul>
+                            </section>
+                        </div>
+                    </div>
                 </div>
 
                 <div class="content-section" id="supportSection" style="display: none;">
