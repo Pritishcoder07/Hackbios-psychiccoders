@@ -315,23 +315,73 @@
 
 // Firebase Configuration
 // NOTE: Replace these with your actual Firebase config values
-const firebaseConfig = {
+const exporterFirebaseConfig = {
     apiKey: "AIzaSyDiQ-R5oJ124N3fhm9Nhs7sC5yJZQM43Ts",
-  authDomain: "expoter-af015.firebaseapp.com",
-  projectId: "expoter-af015",
-  storageBucket: "expoter-af015.firebasestorage.app",
-  messagingSenderId: "1094581941288",
-  appId: "1:1094581941288:web:43f872395cf17eafd1311d",
-  measurementId: "G-GSYX71VGVF"
+    authDomain: "expoter-af015.firebaseapp.com",
+    projectId: "expoter-af015",
+    storageBucket: "expoter-af015.firebasestorage.app",
+    messagingSenderId: "1094581941288",
+    appId: "1:1094581941288:web:43f872395cf17eafd1311d",
+    measurementId: "G-GSYX71VGVF"
 };
 
-// Initialize Firebase
-let firebaseApp, auth;
-try {
-    firebaseApp = firebase.initializeApp(firebaseConfig);
-    auth = firebase.auth();
-} catch (error) {
-    console.warn('Firebase initialization error. Please configure Firebase credentials:', error);
+// Dedicated Importer Firebase project (placeholder values)
+// TODO: Replace with live importer Firebase project credentials
+const importerFirebaseConfig = {
+    apiKey: "AIzaSyAR-xJ3WZsw8m9ZE97hDRiHFaU0Uilq9Lw",
+    authDomain: "impoter-9e6bf.firebaseapp.com",
+    databaseURL: "https://impoter-9e6bf-default-rtdb.firebaseio.com",
+    projectId: "impoter-9e6bf",
+    storageBucket: "impoter-9e6bf.firebasestorage.app",
+    messagingSenderId: "663462993062",
+    appId: "1:663462993062:web:be35a602082d488315e867",
+    measurementId: "G-7ZHY799QTS"
+};
+
+// Initialize Firebase instances for exporter and importer
+const firebaseApps = {};
+const authInstances = {};
+const redirectTargets = {
+    exporter: 'Export-Dashboard/export-dashboard.html',
+    importer: 'Impoter-Dashboard/impoter-dashboard.html'
+};
+
+let currentUserType = 'exporter';
+let currentAuthTab = 'login';
+
+function initializeFirebaseApp(config, name) {
+    try {
+        if (name) {
+            const existing = firebase.apps.find(app => app.name === name);
+            return existing || firebase.initializeApp(config, name);
+        }
+        if (firebase.apps.length) {
+            return firebase.app();
+        }
+        return firebase.initializeApp(config);
+    } catch (error) {
+        console.warn(`Firebase initialization error for ${name || 'default app'}. Please configure Firebase credentials:`, error);
+        return null;
+    }
+}
+
+firebaseApps.exporter = initializeFirebaseApp(exporterFirebaseConfig);
+firebaseApps.importer = initializeFirebaseApp(importerFirebaseConfig, 'importerApp');
+
+if (firebaseApps.exporter) {
+    authInstances.exporter = firebaseApps.exporter.auth();
+}
+
+if (firebaseApps.importer) {
+    authInstances.importer = firebaseApps.importer.auth();
+}
+
+function getAuthInstance(userType = 'exporter') {
+    const auth = authInstances[userType];
+    if (!auth) {
+        console.warn(`Firebase auth not configured for ${userType}.`);
+    }
+    return auth;
 }
 
 // ============================================
@@ -344,7 +394,7 @@ let otpSent = false;
 /**
  * Open authentication modal
  */
-function openAuthModal(tab = 'login') {
+function openAuthModal(tab = 'login', userType = 'exporter') {
     const modal = document.getElementById('authModal');
     if (!modal) return;
     
@@ -353,6 +403,7 @@ function openAuthModal(tab = 'login') {
     document.body.style.overflow = 'hidden';
     
     // Switch to specified tab
+    switchUserType(userType);
     switchAuthTab(tab);
     
     // Focus management
@@ -375,31 +426,42 @@ function closeAuthModal() {
     
     // Reset forms
     resetAuthForms();
+    switchUserType('exporter');
+    switchAuthTab('login');
 }
 
 /**
  * Switch between login and signup tabs
  */
-function switchAuthTab(tab) {
-    const loginForm = document.getElementById('loginForm');
-    const signupForm = document.getElementById('signupForm');
-    const loginTab = document.querySelector('[data-tab="login"]');
-    const signupTab = document.querySelector('[data-tab="signup"]');
-    
-    if (tab === 'login') {
-        loginForm?.classList.add('active');
-        signupForm?.classList.remove('active');
-        loginTab?.classList.add('active');
-        signupTab?.classList.remove('active');
-    } else {
-        signupForm?.classList.add('active');
-        loginForm?.classList.remove('active');
-        signupTab?.classList.add('active');
-        loginTab?.classList.remove('active');
+function switchAuthTab(tab, options = {}) {
+    currentAuthTab = tab;
+    const loginTabBtn = document.querySelector('[data-tab="login"]');
+    const signupTabBtn = document.querySelector('[data-tab="signup"]');
+
+    loginTabBtn?.classList.toggle('active', tab === 'login');
+    signupTabBtn?.classList.toggle('active', tab === 'signup');
+
+    document.querySelectorAll('.auth-form').forEach(form => form.classList.remove('active'));
+
+    const targetForms = {
+        exporter: {
+            login: 'loginForm',
+            signup: 'signupForm'
+        },
+        importer: {
+            login: 'importerLoginForm',
+            signup: 'importerSignupForm'
+        }
+    };
+
+    const targetId = targetForms[currentUserType]?.[tab];
+    if (targetId) {
+        document.getElementById(targetId)?.classList.add('active');
     }
-    
-    // Reset forms when switching
-    resetAuthForms();
+
+    if (!options.skipReset) {
+        resetAuthForms();
+    }
 }
 
 /**
@@ -431,6 +493,23 @@ function switchLoginMethod(method) {
     if (otpBtnText) otpBtnText.textContent = 'Send OTP';
 }
 
+function switchUserType(userType) {
+    currentUserType = userType;
+
+    document.querySelectorAll('.user-type-btn').forEach(button => {
+        const isActive = button.dataset.user === userType;
+        button.classList.toggle('active', isActive);
+        button.setAttribute('aria-pressed', isActive ? 'true' : 'false');
+    });
+
+    document.querySelectorAll('.auth-user-type-section').forEach(section => {
+        section.classList.toggle('active', section.dataset.user === userType);
+    });
+
+    switchAuthTab(currentAuthTab, { skipReset: true });
+    resetAuthForms();
+}
+
 /**
  * Toggle password visibility
  */
@@ -456,8 +535,8 @@ function togglePassword(inputId) {
 /**
  * Check password strength
  */
-function checkPasswordStrength(password) {
-    const strengthIndicator = document.getElementById('passwordStrength');
+function checkPasswordStrength(password, indicatorId = 'passwordStrength') {
+    const strengthIndicator = document.getElementById(indicatorId);
     if (!strengthIndicator) return;
     
     if (!password) {
@@ -486,7 +565,14 @@ document.addEventListener('DOMContentLoaded', () => {
     const signupPassword = document.getElementById('signupPassword');
     if (signupPassword) {
         signupPassword.addEventListener('input', (e) => {
-            checkPasswordStrength(e.target.value);
+            checkPasswordStrength(e.target.value, 'passwordStrength');
+        });
+    }
+
+    const importerPassword = document.getElementById('importerPassword');
+    if (importerPassword) {
+        importerPassword.addEventListener('input', (e) => {
+            checkPasswordStrength(e.target.value, 'importerPasswordStrength');
         });
     }
 });
@@ -511,15 +597,9 @@ function showAuthMessage(message, type = 'info') {
  * Reset all auth forms
  */
 function resetAuthForms() {
-    // Reset login form
-    const emailLoginForm = document.getElementById('emailLoginFormElement');
-    const otpLoginForm = document.getElementById('otpLoginFormElement');
-    if (emailLoginForm) emailLoginForm.reset();
-    if (otpLoginForm) otpLoginForm.reset();
-    
-    // Reset signup form
-    const signupForm = document.getElementById('signupFormElement');
-    if (signupForm) signupForm.reset();
+    document.querySelectorAll('#authModal form').forEach(form => {
+        form.reset();
+    });
     
     // Reset OTP state
     otpSent = false;
@@ -530,8 +610,10 @@ function resetAuthForms() {
     if (otpBtnText) otpBtnText.textContent = 'Send OTP';
     
     // Reset password strength
-    const passwordStrength = document.getElementById('passwordStrength');
-    if (passwordStrength) passwordStrength.className = 'password-strength';
+    ['passwordStrength', 'importerPasswordStrength'].forEach(id => {
+        const indicator = document.getElementById(id);
+        if (indicator) indicator.className = 'password-strength';
+    });
     
     // Clear messages
     const messageEl = document.getElementById('authMessage');
@@ -564,20 +646,21 @@ function setButtonLoading(buttonId, loading) {
 /**
  * Handle email/password login
  */
-async function handleEmailLogin(event) {
+async function handleEmailLogin(event, userType = currentUserType) {
     event.preventDefault();
-    
+
+    const auth = getAuthInstance(userType);
     if (!auth) {
-        showAuthMessage('Firebase is not configured. Please add your Firebase credentials.', 'error');
+        showAuthMessage(`Firebase is not configured for ${userType}. Please add your Firebase credentials.`, 'error');
         return;
     }
     
     const form = event.target;
     const email = form.email.value.trim();
     const password = form.password.value;
-    const button = document.getElementById('emailLoginBtn');
+    const buttonId = userType === 'importer' ? 'importerEmailLoginBtn' : 'emailLoginBtn';
     
-    setButtonLoading('emailLoginBtn', true);
+    setButtonLoading(buttonId, true);
     showAuthMessage('', 'info');
     
     try {
@@ -601,7 +684,8 @@ async function handleEmailLogin(event) {
         // Redirect or update UI
         setTimeout(() => {
             closeAuthModal();
-            window.location.href = 'Export-Dashboard/export-dashboard.html';
+            const redirectTo = redirectTargets[userType] || redirectTargets.exporter;
+            window.location.href = redirectTo;
         }, 1500);
         
     } catch (error) {
@@ -628,7 +712,7 @@ async function handleEmailLogin(event) {
         
         showAuthMessage(errorMessage, 'error');
     } finally {
-        setButtonLoading('emailLoginBtn', false);
+        setButtonLoading(buttonId, false);
     }
 }
 
@@ -638,6 +722,7 @@ async function handleEmailLogin(event) {
 async function handleOTPLogin(event) {
     event.preventDefault();
     
+    const auth = getAuthInstance('exporter');
     if (!auth) {
         showAuthMessage('Firebase is not configured. Please add your Firebase credentials.', 'error');
         return;
@@ -732,11 +817,12 @@ async function handleOTPLogin(event) {
 /**
  * Handle signup
  */
-async function handleSignup(event) {
+async function handleSignup(event, userType = currentUserType) {
     event.preventDefault();
-    
+
+    const auth = getAuthInstance(userType);
     if (!auth) {
-        showAuthMessage('Firebase is not configured. Please add your Firebase credentials.', 'error');
+        showAuthMessage(`Firebase is not configured for ${userType}. Please add your Firebase credentials.`, 'error');
         return;
     }
     
@@ -747,8 +833,11 @@ async function handleSignup(event) {
     const password = form.password.value;
     const country = form.country.value;
     const address = form.address.value.trim();
+    const phone = form.phone ? form.phone.value.trim() : '';
+    const registration = form.registration ? form.registration.value.trim() : '';
     
-    setButtonLoading('signupBtn', true);
+    const buttonId = userType === 'importer' ? 'importerSignupBtn' : 'signupBtn';
+    setButtonLoading(buttonId, true);
     showAuthMessage('', 'info');
     
     try {
@@ -771,6 +860,9 @@ async function handleSignup(event) {
             email: email,
             country: country,
             address: address,
+            phone: phone,
+            registration: registration,
+            userType: userType,
             createdAt: new Date().toISOString()
         };
         
@@ -781,11 +873,16 @@ async function handleSignup(event) {
         showAuthMessage('Account created successfully! Redirecting...', 'success');
         
         // Send email verification (optional)
-        await user.sendEmailVerification();
+        try {
+            await user.sendEmailVerification();
+        } catch (verificationError) {
+            console.warn('Email verification error:', verificationError);
+        }
         
         setTimeout(() => {
             closeAuthModal();
-            window.location.href = 'Export-Dashboard/export-dashboard.html';
+            const redirectTo = redirectTargets[userType] || redirectTargets.exporter;
+            window.location.href = redirectTo;
         }, 1500);
         
     } catch (error) {
@@ -809,23 +906,26 @@ async function handleSignup(event) {
         
         showAuthMessage(errorMessage, 'error');
     } finally {
-        setButtonLoading('signupBtn', false);
+        setButtonLoading(buttonId, false);
     }
 }
 
 /**
  * Handle forgot password
  */
-async function handleForgotPassword(event) {
+async function handleForgotPassword(event, userType = currentUserType) {
     event.preventDefault();
-    
+
+    const auth = getAuthInstance(userType);
     if (!auth) {
-        showAuthMessage('Firebase is not configured. Please add your Firebase credentials.', 'error');
+        showAuthMessage(`Firebase is not configured for ${userType}. Please add your Firebase credentials.`, 'error');
         return;
     }
-    
-    const email = document.getElementById('loginEmail').value.trim();
-    
+
+    const emailInputId = userType === 'importer' ? 'importerLoginEmail' : 'loginEmail';
+    const emailInput = document.getElementById(emailInputId);
+    const email = emailInput?.value.trim();
+
     if (!email || !email.includes('@')) {
         showAuthMessage('Please enter a valid email address', 'error');
         return;

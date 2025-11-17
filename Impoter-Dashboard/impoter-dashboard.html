@@ -1,0 +1,411 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Importer Control Room | FXcgo</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../styles.css">
+    <link rel="stylesheet" href="../Export-Dashboard/dashboard-styles.css">
+    <link rel="stylesheet" href="importer-dashboard.css">
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-database-compat.js"></script>
+</head>
+<body>
+    <div class="dashboard-container importer-ui">
+        <aside class="dashboard-sidebar" id="sidebar">
+            <div class="sidebar-header">
+                <div class="logo">
+                    <span class="logo-text">FXcgo Imports</span>
+                </div>
+                <button class="sidebar-toggle" id="sidebarToggle" aria-label="Toggle sidebar">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <line x1="18" y1="6" x2="6" y2="18"></line>
+                        <line x1="6" y1="6" x2="18" y2="18"></line>
+                    </svg>
+                </button>
+            </div>
+            <nav class="sidebar-nav">
+                <ul class="nav-list">
+                    <li class="nav-item">
+                        <a class="nav-link active" data-tab="dashboard" href="#dashboard">
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <rect x="3" y="3" width="7" height="7"></rect>
+                                <rect x="14" y="3" width="7" height="7"></rect>
+                                <rect x="14" y="14" width="7" height="7"></rect>
+                                <rect x="3" y="14" width="7" height="7"></rect>
+                            </svg>
+                            <span>Dashboard</span>
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" data-tab="shipments" href="#shipments">
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"></path>
+                                <polyline points="3.27 6.96 12 12.01 20.73 6.96"></polyline>
+                                <line x1="12" y1="22.08" x2="12" y2="12"></line>
+                            </svg>
+                            <span>Shipments</span>
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" data-tab="documents" href="#documents">
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+                                <polyline points="14 2 14 8 20 8"></polyline>
+                            </svg>
+                            <span>Documents</span>
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" data-tab="payments" href="#payments">
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <rect x="1" y="4" width="22" height="16" rx="2" ry="2"></rect>
+                                <line x1="1" y1="10" x2="23" y2="10"></line>
+                            </svg>
+                            <span>Payments</span>
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" data-tab="verification" href="#verification">
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path>
+                            </svg>
+                            <span>Verification</span>
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" data-tab="disputes" href="#disputes">
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path>
+                            </svg>
+                            <span>Disputes</span>
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" data-tab="support" href="#support">
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <circle cx="12" cy="12" r="10"></circle>
+                                <path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"></path>
+                                <line x1="12" y1="17" x2="12.01" y2="17"></line>
+                            </svg>
+                            <span>Support</span>
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" data-tab="orders" href="#orders">
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M3 7h18"></path>
+                                <path d="M6 7V3h12v4"></path>
+                                <path d="M5 7l1.68 12.06A2 2 0 0 0 8.66 21h6.68a2 2 0 0 0 1.98-1.94L19 7"></path>
+                            </svg>
+                            <span>Orders</span>
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" data-tab="notifications" href="#notifications">
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path>
+                                <path d="M13.73 21a2 2 0 0 1-3.46 0"></path>
+                            </svg>
+                            <span>Notifications</span>
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" data-tab="profile" href="#profile">
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M20 21v-2a4 4 0 0 0-3-3.87"></path>
+                                <path d="M4 21v-2a4 4 0 0 1 3-3.87"></path>
+                                <circle cx="12" cy="7" r="4"></circle>
+                            </svg>
+                            <span>Profile</span>
+                        </a>
+                    </li>
+                </ul>
+            </nav>
+            <div class="sidebar-footer">
+                <button id="importerLogoutBtn" class="btn-ghost logout-btn">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path>
+                        <polyline points="16 17 21 12 16 7"></polyline>
+                        <line x1="21" y1="12" x2="9" y2="12"></line>
+                    </svg>
+                    Logout
+                </button>
+            </div>
+        </aside>
+
+        <div class="dashboard-main">
+            <header class="dashboard-header">
+                <div class="header-left">
+                    <button class="mobile-menu-toggle" id="mobileMenuToggle" aria-label="Toggle menu">
+                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <line x1="3" y1="12" x2="21" y2="12"></line>
+                            <line x1="3" y1="6" x2="21" y2="6"></line>
+                            <line x1="3" y1="18" x2="21" y2="18"></line>
+                        </svg>
+                    </button>
+                    <h1 class="page-title" id="pageTitle">Dashboard</h1>
+                </div>
+                <div class="header-right">
+                    <button class="notification-btn" aria-label="Notifications">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path>
+                            <path d="M13.73 21a2 2 0 0 1-3.46 0"></path>
+                        </svg>
+                        <span class="notification-badge" id="notificationCounter">0</span>
+                    </button>
+                    <div class="profile-dropdown">
+                        <button class="profile-btn" id="profileBtn" aria-label="Profile">
+                            <div class="profile-avatar" id="profileAvatar">
+                                <span id="avatarInitials">IM</span>
+                            </div>
+                            <span class="profile-name" id="profileName">Importer</span>
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <polyline points="6 9 12 15 18 9"></polyline>
+                            </svg>
+                        </button>
+                    </div>
+                </div>
+            </header>
+
+            <main class="dashboard-content">
+                <section class="content-section active" id="dashboardSection">
+                    <div class="welcome-card importer-welcome">
+                        <div>
+                            <p class="eyebrow">Welcome Back, Importer!</p>
+                            <h2 id="importerUserName">Importer Workspace</h2>
+                            <p>Track shipments, verify documents, make secure payments, and manage every import workflow from one place.</p>
+                        </div>
+                        <div class="welcome-meta">
+                            <span id="importerStatusBadge" class="badge badge-sync">Syncing</span>
+                            <button class="btn-secondary" id="refreshImporterData">Refresh</button>
+                        </div>
+                    </div>
+                    <div class="summary-grid">
+                        <article class="summary-card">
+                            <p>Active Shipments</p>
+                            <h3 id="summaryActiveShipments">0</h3>
+                        </article>
+                        <article class="summary-card">
+                            <p>Pending Payments</p>
+                            <h3 id="summaryPendingPayments">0</h3>
+                        </article>
+                        <article class="summary-card">
+                            <p>Pending Verification</p>
+                            <h3 id="summaryPendingVerification">0</h3>
+                        </article>
+                        <article class="summary-card">
+                            <p>Delivered Shipments</p>
+                            <h3 id="summaryDeliveredShipments">0</h3>
+                        </article>
+                    </div>
+                </section>
+
+                <section class="content-section" id="shipmentsSection">
+                    <div class="panel-card">
+                        <header>
+                            <div>
+                                <h2>Your Shipments</h2>
+                                <p>Monitor all active, completed, and upcoming shipments.</p>
+                            </div>
+                        </header>
+                        <div class="shipment-legend">
+                            <span>In Transit</span>
+                            <span>Arrived at Port</span>
+                            <span>Under Customs Check</span>
+                            <span>Cleared</span>
+                            <span>Out for Delivery</span>
+                            <span>Delivered</span>
+                        </div>
+                        <div id="shipmentsList" class="shipments-grid"></div>
+                    </div>
+                </section>
+
+                <section class="content-section" id="documentsSection">
+                    <div class="panel-card">
+                        <header>
+                            <div>
+                                <h2>Shipment Documents</h2>
+                                <p>View all exporter-uploaded documents through a single QR code.</p>
+                            </div>
+                            <div class="action-buttons">
+                                <button id="documentsViewBtn" class="btn-secondary">View Documents</button>
+                                <button id="documentsDownloadBtn" class="btn-primary">Download ZIP</button>
+                            </div>
+                        </header>
+                        <div id="documentsList" class="documents-grid"></div>
+                    </div>
+                </section>
+
+                <section class="content-section" id="paymentsSection">
+                    <div class="panel-card">
+                        <header>
+                            <div>
+                                <h2>Make International Payment</h2>
+                                <p>Pay your exporter securely with multi-currency support and transparent charges.</p>
+                            </div>
+                        </header>
+                        <div class="payments-layout">
+                            <form id="paymentForm" class="payment-form">
+                                <label>Payable Amount
+                                    <input type="number" name="amount" min="0" step="0.01" required placeholder="Enter amount">
+                                </label>
+                                <label>Currency
+                                    <select name="currency" id="paymentCurrency" required>
+                                        <option value="USD">USD</option>
+                                        <option value="EUR">EUR</option>
+                                        <option value="INR">INR</option>
+                                        <option value="OTHERS">Others</option>
+                                    </select>
+                                </label>
+                                <label>Notes
+                                    <textarea name="notes" rows="3" placeholder="Add payment reference"></textarea>
+                                </label>
+                                <div class="payment-meta">
+                                    <p>Live exchange rate: <span id="paymentLiveRate">--</span></p>
+                                    <div id="paymentFeeBreakdown" class="fee-breakdown"></div>
+                                </div>
+                                <button type="submit" class="btn-primary full-width">Proceed to Pay</button>
+                            </form>
+                            <div class="payment-history">
+                                <h3>Payment History</h3>
+                                <div id="paymentHistoryList" class="history-list"></div>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+                <section class="content-section" id="verificationSection">
+                    <div class="panel-card">
+                        <header>
+                            <div>
+                                <h2>Importer Verification (iKYC)</h2>
+                                <p>Importer must complete identity verification for secure transactions.</p>
+                            </div>
+                        </header>
+                        <div class="verification-status">
+                            <span id="verificationStatusBadge" class="tag">Verification Pending</span>
+                            <p id="verificationStatusCopy">Status updates will appear here.</p>
+                        </div>
+                    </div>
+                </section>
+
+                <section class="content-section" id="disputesSection">
+                    <div class="panel-card">
+                        <header>
+                            <div>
+                                <h2>Raise a Dispute</h2>
+                                <p>If there is an issue with goods, documents, payments, or shipment damage, raise a dispute.</p>
+                            </div>
+                        </header>
+                        <form id="disputeForm" class="dispute-form">
+                            <label>Issue Type
+                                <select name="type" required>
+                                    <option value="Damaged Goods">Damaged Goods</option>
+                                    <option value="Wrong Quantity">Wrong Quantity</option>
+                                    <option value="Missing Documents">Missing Documents</option>
+                                    <option value="Payment Issue">Payment Issue</option>
+                                    <option value="Shipment Delay">Shipment Delay</option>
+                                </select>
+                            </label>
+                            <label>Description
+                                <textarea name="description" rows="4" required placeholder="Describe the issue"></textarea>
+                            </label>
+                            <button type="submit" class="btn-primary">Raise Dispute Now</button>
+                        </form>
+                        <div class="history-card">
+                            <h3>Dispute History</h3>
+                            <div id="disputeHistoryList" class="history-list"></div>
+                        </div>
+                    </div>
+                </section>
+
+                <section class="content-section" id="supportSection">
+                    <div class="panel-card">
+                        <header>
+                            <div>
+                                <h2>Support Chat</h2>
+                                <p>Chat with the support bot or admin, and access FAQs.</p>
+                            </div>
+                        </header>
+                        <div class="support-layout">
+                            <div class="chat-column">
+                                <div id="supportChatLog" class="chat-log"></div>
+                                <form id="supportMessageForm" class="chat-form">
+                                    <textarea name="message" rows="3" placeholder="Type your message"></textarea>
+                                    <button type="submit" class="btn-primary">Send</button>
+                                </form>
+                            </div>
+                            <div class="faq-column">
+                                <h3>FAQs</h3>
+                                <ul id="supportFaqList" class="faq-list"></ul>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+                <section class="content-section" id="ordersSection">
+                    <div class="panel-card">
+                        <header>
+                            <div>
+                                <h2>Past Orders & Imports</h2>
+                                <p>Review delivery dates, invoices, documents, chat history, and receipts.</p>
+                            </div>
+                        </header>
+                        <div id="ordersList" class="orders-grid"></div>
+                    </div>
+                </section>
+
+                <section class="content-section" id="notificationsSection">
+                    <div class="panel-card">
+                        <header>
+                            <div>
+                                <h2>Notifications</h2>
+                                <p>Stay updated on shipment, payment, and compliance activity.</p>
+                            </div>
+                        </header>
+                        <div id="notificationsList" class="notification-list"></div>
+                    </div>
+                </section>
+
+                <section class="content-section" id="profileSection">
+                    <div class="panel-card">
+                        <header>
+                            <div>
+                                <h2>Profile & Settings</h2>
+                                <p>Manage your business profile, addresses, language, and payment methods.</p>
+                            </div>
+                        </header>
+                        <div class="profile-grid">
+                            <div>
+                                <h3>Business Details</h3>
+                                <dl id="profileBusinessDetails"></dl>
+                            </div>
+                            <div>
+                                <h3>Saved Addresses</h3>
+                                <ul id="profileAddresses" class="simple-list"></ul>
+                            </div>
+                            <div>
+                                <h3>Preferences</h3>
+                                <dl id="profilePreferences"></dl>
+                            </div>
+                            <div>
+                                <h3>Payment Methods</h3>
+                                <ul id="profilePaymentMethods" class="simple-list"></ul>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+            </main>
+        </div>
+    </div>
+
+    <div id="importerToast" class="toast"></div>
+    <script src="importer-dashboard.js"></script>
+</body>
+</html>
+

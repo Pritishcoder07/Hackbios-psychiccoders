@@ -1,0 +1,386 @@
+.importer-ui .dashboard-main {
+    background: linear-gradient(135deg, #f8fafc 0%, #eef2ff 100%);
+}
+
+.importer-ui .welcome-card {
+    background: linear-gradient(135deg, #2563eb 0%, #4f46e5 100%);
+    color: #fff;
+    padding: 28px;
+    border-radius: 20px;
+    margin-bottom: 24px;
+    box-shadow: 0 20px 35px rgba(79, 70, 229, 0.25);
+    display: flex;
+    justify-content: space-between;
+    gap: 24px;
+    flex-wrap: wrap;
+}
+
+.importer-ui .welcome-card .eyebrow {
+    text-transform: uppercase;
+    letter-spacing: 0.2em;
+    font-size: 0.75rem;
+    opacity: 0.85;
+}
+
+.importer-ui .welcome-meta {
+    display: flex;
+    gap: 12px;
+    align-items: center;
+}
+
+.importer-ui .badge {
+    padding: 6px 16px;
+    border-radius: 999px;
+    font-weight: 600;
+}
+
+.importer-ui .badge-sync {
+    background: rgba(255, 255, 255, 0.15);
+}
+
+.importer-ui .summary-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+    gap: 18px;
+}
+
+.importer-ui .summary-card {
+    background: #fff;
+    border-radius: 18px;
+    padding: 20px;
+    box-shadow: 0 15px 30px rgba(15, 23, 42, 0.08);
+}
+
+.importer-ui .summary-card p {
+    color: #64748b;
+    font-weight: 600;
+    margin-bottom: 8px;
+}
+
+.importer-ui .summary-card h3 {
+    font-size: 2rem;
+    color: #0f172a;
+}
+
+.importer-ui .panel-card {
+    background: #fff;
+    border-radius: 20px;
+    padding: 24px;
+    box-shadow: 0 10px 25px rgba(15, 23, 42, 0.08);
+}
+
+.importer-ui .panel-card header {
+    margin-bottom: 18px;
+    display: flex;
+    justify-content: space-between;
+    gap: 16px;
+    flex-wrap: wrap;
+}
+
+.importer-ui .shipment-legend {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-bottom: 16px;
+    color: #475569;
+    font-size: 0.85rem;
+}
+
+.importer-ui .shipment-legend span {
+    background: #f8fafc;
+    padding: 6px 10px;
+    border-radius: 999px;
+    border: 1px solid #e2e8f0;
+}
+
+.importer-ui .shipments-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+    gap: 16px;
+}
+
+.importer-ui .shipment-card {
+    border: 1px solid #e2e8f0;
+    border-radius: 18px;
+    padding: 16px;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.importer-ui .shipment-card h4 {
+    font-size: 1.1rem;
+    color: #0f172a;
+}
+
+.importer-ui .shipment-meta {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    color: #475569;
+    font-size: 0.9rem;
+}
+
+.importer-ui .shipment-status {
+    align-self: flex-start;
+    padding: 4px 10px;
+    border-radius: 999px;
+    font-size: 0.8rem;
+    font-weight: 600;
+}
+
+.importer-ui .status-in-transit { background: #dbeafe; color: #1d4ed8; }
+.importer-ui .status-arrived { background: #fef3c7; color: #b45309; }
+.importer-ui .status-customs { background: #fee2e2; color: #b91c1c; }
+.importer-ui .status-cleared { background: #dcfce7; color: #15803d; }
+.importer-ui .status-out-for-delivery { background: #ede9fe; color: #6d28d9; }
+.importer-ui .status-delivered { background: #bbf7d0; color: #166534; }
+
+.importer-ui .documents-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 16px;
+}
+
+.importer-ui .document-card {
+    border: 1px solid #e2e8f0;
+    border-radius: 16px;
+    padding: 16px;
+    background: #f8fafc;
+}
+
+.importer-ui .action-buttons {
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+}
+
+.importer-ui .payments-layout {
+    display: grid;
+    grid-template-columns: 1.1fr 0.9fr;
+    gap: 24px;
+}
+
+.importer-ui .payment-form {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+}
+
+.importer-ui .payment-form input,
+.importer-ui .payment-form select,
+.importer-ui .payment-form textarea {
+    margin-top: 6px;
+    width: 100%;
+    border-radius: 12px;
+    border: 1px solid #d0d7e4;
+    padding: 10px 14px;
+    font-size: 1rem;
+    font-family: inherit;
+}
+
+.importer-ui .payment-meta {
+    background: #f1f5f9;
+    border-radius: 16px;
+    padding: 12px;
+    font-size: 0.9rem;
+    color: #475569;
+}
+
+.importer-ui .fee-breakdown {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    margin-top: 8px;
+}
+
+.importer-ui .payment-history {
+    background: #f8fafc;
+    border-radius: 18px;
+    padding: 16px;
+    border: 1px solid #e2e8f0;
+}
+
+.importer-ui .history-list {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    margin-top: 12px;
+}
+
+.importer-ui .history-item {
+    padding: 12px;
+    border-radius: 14px;
+    border: 1px solid #e2e8f0;
+    background: #fff;
+}
+
+.importer-ui .verification-status {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    margin-top: 16px;
+}
+
+.importer-ui .verification-status .tag {
+    align-self: flex-start;
+    padding: 6px 14px;
+    border-radius: 999px;
+    background: #fef3c7;
+    color: #92400e;
+    font-weight: 600;
+}
+
+.importer-ui .dispute-form {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    margin-bottom: 24px;
+}
+
+.importer-ui .dispute-form select,
+.importer-ui .dispute-form textarea {
+    margin-top: 6px;
+    border-radius: 12px;
+    border: 1px solid #d0d7e4;
+    padding: 10px 14px;
+    font-family: inherit;
+}
+
+.importer-ui .support-layout {
+    display: grid;
+    grid-template-columns: 1.1fr 0.9fr;
+    gap: 20px;
+}
+
+.importer-ui .chat-log {
+    border: 1px solid #e2e8f0;
+    border-radius: 16px;
+    padding: 16px;
+    height: 280px;
+    overflow-y: auto;
+    background: #f8fafc;
+}
+
+.importer-ui .chat-entry {
+    margin-bottom: 12px;
+    padding-bottom: 12px;
+    border-bottom: 1px solid #e2e8f0;
+}
+
+.importer-ui .chat-form {
+    margin-top: 12px;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.importer-ui .chat-form textarea {
+    border-radius: 12px;
+    border: 1px solid #d0d7e4;
+    padding: 10px 14px;
+    font-family: inherit;
+}
+
+.importer-ui .faq-column {
+    border: 1px solid #e2e8f0;
+    border-radius: 16px;
+    padding: 16px;
+    background: #fff;
+}
+
+.importer-ui .faq-list {
+    list-style: none;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    margin-top: 12px;
+    color: #475569;
+}
+
+.importer-ui .orders-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+    gap: 16px;
+}
+
+.importer-ui .order-card {
+    border: 1px solid #e2e8f0;
+    border-radius: 16px;
+    padding: 16px;
+    background: #fff;
+}
+
+.importer-ui .notification-list {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.importer-ui .notification-item {
+    border: 1px solid #e2e8f0;
+    border-radius: 14px;
+    padding: 12px;
+    background: #f8fafc;
+}
+
+.importer-ui .profile-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    gap: 20px;
+}
+
+.importer-ui .simple-list {
+    list-style: disc;
+    padding-left: 18px;
+    color: #475569;
+}
+
+.importer-ui .simple-list li {
+    margin-bottom: 6px;
+}
+
+.importer-ui .empty-state {
+    border: 1px dashed #cbd5ff;
+    background: #f8fafc;
+    border-radius: 16px;
+    padding: 20px;
+    text-align: center;
+    color: #475569;
+}
+
+.importer-ui .toast {
+    position: fixed;
+    bottom: 24px;
+    right: 32px;
+    background: #0f172a;
+    color: #fff;
+    padding: 14px 20px;
+    border-radius: 999px;
+    box-shadow: 0 15px 30px rgba(15, 23, 42, 0.2);
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.3s ease, transform 0.3s ease;
+    transform: translateY(10px);
+    z-index: 999;
+}
+
+.importer-ui .toast.show {
+    opacity: 1;
+    pointer-events: auto;
+    transform: translateY(0);
+}
+
+@media (max-width: 1200px) {
+    .importer-ui .payments-layout,
+    .importer-ui .support-layout {
+        grid-template-columns: 1fr;
+    }
+}
+
+@media (max-width: 960px) {
+    .importer-ui .welcome-card {
+        flex-direction: column;
+    }
+}
+

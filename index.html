@@ -165,15 +165,15 @@
                     <div class="contact-details">
                         <div class="contact-item">
                             <span class="contact-icon" aria-hidden="true">📍</span>
-                            <address>Mumbai, Maharashtra, India</address>
+                            <address>Bhilai, Chhattisgarh, India</address>
                         </div>
                         <div class="contact-item">
                             <span class="contact-icon" aria-hidden="true">📞</span>
-                            <a href="tel:+919876543210" aria-label="Call us">+91 98765 43210</a>
+                            <a href="tel:+919876543210" aria-label="Call us">+919229923377</a>
                         </div>
                         <div class="contact-item">
                             <span class="contact-icon" aria-hidden="true">📧</span>
-                            <a href="mailto:support@globalguardexports.com" aria-label="Email us">support@globalguardexports.com</a>
+                            <a href="mailto:support@globalguardexports.com" aria-label="Email us">sumitkuma4042006@gmail.com</a>
                         </div>
                     </div>
                 </div>
@@ -206,6 +206,16 @@
             </button>
             
             <div class="auth-modal-content">
+                <!-- User Type Switcher -->
+                <div class="auth-user-type-toggle" role="tablist" aria-label="Select account type">
+                    <button type="button" class="user-type-btn active" data-user="exporter" onclick="switchUserType('exporter')">
+                        <span>Exporter Access</span>
+                    </button>
+                    <button type="button" class="user-type-btn" data-user="importer" onclick="switchUserType('importer')">
+                        <span>Importer Access</span>
+                    </button>
+                </div>
+
                 <!-- Tab Switcher -->
                 <div class="auth-tabs">
                     <button class="auth-tab active" data-tab="login" onclick="switchAuthTab('login')">
@@ -216,41 +226,178 @@
                     </button>
                 </div>
 
-                <!-- Login Form -->
-                <div id="loginForm" class="auth-form active">
-                    <h2 id="authModalTitle" class="auth-form-title">Welcome Back</h2>
-                    <p class="auth-form-subtitle">Login to your exporter account</p>
-                    
-                    <!-- Login Method Toggle -->
-                    <div class="login-method-toggle">
-                        <button class="method-btn active" data-method="email" onclick="switchLoginMethod('email')">
-                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"></path>
-                                <polyline points="22,6 12,13 2,6"></polyline>
-                            </svg>
-                            Email/Username
-                        </button>
-                        <button class="method-btn" data-method="otp" onclick="switchLoginMethod('otp')">
-                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                <rect x="2" y="6" width="20" height="12" rx="2"></rect>
-                                <path d="M6 10h.01M10 10h.01M14 10h.01M18 10h.01"></path>
-                            </svg>
-                            OTP
-                        </button>
+                <div class="auth-user-type-section active" data-user="exporter">
+                    <!-- Login Form -->
+                    <div id="loginForm" class="auth-form active">
+                        <h2 id="authModalTitle" class="auth-form-title">Welcome Back</h2>
+                        <p class="auth-form-subtitle">Login to your exporter account</p>
+                        
+                        <!-- Login Method Toggle -->
+                        <div class="login-method-toggle">
+                            <button class="method-btn active" data-method="email" onclick="switchLoginMethod('email')">
+                                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"></path>
+                                    <polyline points="22,6 12,13 2,6"></polyline>
+                                </svg>
+                                Email/Username
+                            </button>
+                            <button class="method-btn" data-method="otp" onclick="switchLoginMethod('otp')">
+                                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <rect x="2" y="6" width="20" height="12" rx="2"></rect>
+                                    <path d="M6 10h.01M10 10h.01M14 10h.01M18 10h.01"></path>
+                                </svg>
+                                OTP
+                            </button>
+                        </div>
+
+                        <!-- Email/Password Login -->
+                        <div id="emailLoginForm" class="login-method-form active">
+                            <form id="emailLoginFormElement" onsubmit="handleEmailLogin(event, 'exporter')">
+                                <div class="form-group">
+                                    <label for="loginEmail">Email or Username</label>
+                                    <input type="text" id="loginEmail" name="email" placeholder="Enter your email or username" required autocomplete="username">
+                                </div>
+                                <div class="form-group">
+                                    <label for="loginPassword">Password</label>
+                                    <div class="password-input-wrapper">
+                                        <input type="password" id="loginPassword" name="password" placeholder="Enter your password" required autocomplete="current-password">
+                                        <button type="button" class="password-toggle" onclick="togglePassword('loginPassword')" aria-label="Toggle password visibility">
+                                            <svg class="eye-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                                <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
+                                                <circle cx="12" cy="12" r="3"></circle>
+                                            </svg>
+                                        </button>
+                                    </div>
+                                </div>
+                                <div class="form-options">
+                                    <label class="checkbox-label">
+                                        <input type="checkbox" name="remember">
+                                        <span>Remember me</span>
+                                    </label>
+                                    <a href="#" class="forgot-password-link" onclick="handleForgotPassword(event, 'exporter')">Forgot Password?</a>
+                                </div>
+                                <button type="submit" class="btn-submit" id="emailLoginBtn">
+                                    <span class="btn-text">Login</span>
+                                    <span class="btn-loader"></span>
+                                </button>
+                            </form>
+                        </div>
+
+                        <!-- OTP Login -->
+                        <div id="otpLoginForm" class="login-method-form">
+                            <form id="otpLoginFormElement" onsubmit="handleOTPLogin(event)">
+                                <div class="form-group">
+                                    <label for="otpEmail">Email or Phone</label>
+                                    <input type="text" id="otpEmail" name="otpEmail" placeholder="Enter your email or phone number" required>
+                                </div>
+                                <div class="form-group" id="otpCodeGroup" style="display: none;">
+                                    <label for="otpCode">Enter OTP</label>
+                                    <input type="text" id="otpCode" name="otpCode" placeholder="Enter 6-digit OTP" maxlength="6" pattern="[0-9]{6}">
+                                </div>
+                                <button type="submit" class="btn-submit" id="otpLoginBtn">
+                                    <span class="btn-text" id="otpBtnText">Send OTP</span>
+                                    <span class="btn-loader"></span>
+                                </button>
+                            </form>
+                        </div>
                     </div>
 
-                    <!-- Email/Password Login -->
-                    <div id="emailLoginForm" class="login-method-form active">
-                        <form id="emailLoginFormElement" onsubmit="handleEmailLogin(event)">
-                            <div class="form-group">
-                                <label for="loginEmail">Email or Username</label>
-                                <input type="text" id="loginEmail" name="email" placeholder="Enter your email or username" required autocomplete="username">
+                    <!-- Signup Form -->
+                    <div id="signupForm" class="auth-form">
+                        <h2 class="auth-form-title">Create Account</h2>
+                        <p class="auth-form-subtitle">Join GlobalGuard Exports today</p>
+                        
+                        <form id="signupFormElement" onsubmit="handleSignup(event, 'exporter')">
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label for="signupName">Full Name / Username</label>
+                                    <input type="text" id="signupName" name="name" placeholder="Enter your full name" required autocomplete="name">
+                                </div>
+                                <div class="form-group">
+                                    <label for="companyName">Company Name</label>
+                                    <input type="text" id="companyName" name="company" placeholder="Enter company name" required>
+                                </div>
                             </div>
                             <div class="form-group">
-                                <label for="loginPassword">Password</label>
+                                <label for="signupEmail">Email Address</label>
+                                <input type="email" id="signupEmail" name="email" placeholder="Enter your email" required autocomplete="email">
+                            </div>
+                            <div class="form-group">
+                                <label for="signupPassword">Password</label>
                                 <div class="password-input-wrapper">
-                                    <input type="password" id="loginPassword" name="password" placeholder="Enter your password" required autocomplete="current-password">
-                                    <button type="button" class="password-toggle" onclick="togglePassword('loginPassword')" aria-label="Toggle password visibility">
+                                    <input type="password" id="signupPassword" name="password" placeholder="Create a strong password" required autocomplete="new-password">
+                                    <button type="button" class="password-toggle" onclick="togglePassword('signupPassword')" aria-label="Toggle password visibility">
+                                        <svg class="eye-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                            <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
+                                            <circle cx="12" cy="12" r="3"></circle>
+                                        </svg>
+                                        </button>
+                                    </div>
+                                    <div class="password-strength" id="passwordStrength"></div>
+                                </div>
+                            </div>
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label for="country">Country</label>
+                                    <select id="country" name="country" required>
+                                        <option value="">Select Country</option>
+                                        <option value="IN">India</option>
+                                        <option value="US">United States</option>
+                                        <option value="GB">United Kingdom</option>
+                                        <option value="CA">Canada</option>
+                                        <option value="AU">Australia</option>
+                                        <option value="DE">Germany</option>
+                                        <option value="FR">France</option>
+                                        <option value="JP">Japan</option>
+                                        <option value="CN">China</option>
+                                        <option value="BR">Brazil</option>
+                                        <option value="MX">Mexico</option>
+                                        <option value="AE">United Arab Emirates</option>
+                                        <option value="SG">Singapore</option>
+                                        <option value="NL">Netherlands</option>
+                                        <option value="IT">Italy</option>
+                                        <option value="ES">Spain</option>
+                                        <option value="KR">South Korea</option>
+                                        <option value="SA">Saudi Arabia</option>
+                                        <option value="ZA">South Africa</option>
+                                        <option value="OTHER">Other</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <label for="address">Exact Address</label>
+                                <textarea id="address" name="address" rows="3" placeholder="Enter your complete address" required></textarea>
+                            </div>
+                            <div class="form-options">
+                                <label class="checkbox-label">
+                                    <input type="checkbox" name="terms" required>
+                                    <span>I agree to the <a href="#" target="_blank">Terms & Conditions</a> and <a href="#" target="_blank">Privacy Policy</a></span>
+                                </label>
+                            </div>
+                            <button type="submit" class="btn-submit" id="signupBtn">
+                                <span class="btn-text">Create Account</span>
+                                <span class="btn-loader"></span>
+                            </button>
+                        </form>
+                    </div>
+                </div>
+
+                <div class="auth-user-type-section" data-user="importer">
+                    <!-- Importer Login Form -->
+                    <div id="importerLoginForm" class="auth-form">
+                        <h2 class="auth-form-title">Importer Login</h2>
+                        <p class="auth-form-subtitle">Secure access for importer operations</p>
+
+                        <form id="importerEmailLoginFormElement" onsubmit="handleEmailLogin(event, 'importer')">
+                            <div class="form-group">
+                                <label for="importerLoginEmail">Email Address</label>
+                                <input type="email" id="importerLoginEmail" name="email" placeholder="Enter your importer email" required autocomplete="email">
+                            </div>
+                            <div class="form-group">
+                                <label for="importerLoginPassword">Password</label>
+                                <div class="password-input-wrapper">
+                                    <input type="password" id="importerLoginPassword" name="password" placeholder="Enter your password" required autocomplete="current-password">
+                                    <button type="button" class="password-toggle" onclick="togglePassword('importerLoginPassword')" aria-label="Toggle password visibility">
                                         <svg class="eye-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                                             <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
                                             <circle cx="12" cy="12" r="3"></circle>
@@ -263,110 +410,100 @@
                                     <input type="checkbox" name="remember">
                                     <span>Remember me</span>
                                 </label>
-                                <a href="#" class="forgot-password-link" onclick="handleForgotPassword(event)">Forgot Password?</a>
+                                <a href="#" class="forgot-password-link" onclick="handleForgotPassword(event, 'importer')">Forgot Password?</a>
                             </div>
-                            <button type="submit" class="btn-submit" id="emailLoginBtn">
+                            <button type="submit" class="btn-submit" id="importerEmailLoginBtn">
                                 <span class="btn-text">Login</span>
                                 <span class="btn-loader"></span>
                             </button>
                         </form>
                     </div>
 
-                    <!-- OTP Login -->
-                    <div id="otpLoginForm" class="login-method-form">
-                        <form id="otpLoginFormElement" onsubmit="handleOTPLogin(event)">
+                    <!-- Importer Signup Form -->
+                    <div id="importerSignupForm" class="auth-form">
+                        <h2 class="auth-form-title">Importer Sign Up</h2>
+                        <p class="auth-form-subtitle">Create a dedicated importer workspace</p>
+
+                        <form id="importerSignupFormElement" onsubmit="handleSignup(event, 'importer')">
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label for="importerName">Authorized Person</label>
+                                    <input type="text" id="importerName" name="name" placeholder="Full legal name" required autocomplete="name">
+                                </div>
+                                <div class="form-group">
+                                    <label for="importerCompanyName">Importer / Company Name</label>
+                                    <input type="text" id="importerCompanyName" name="company" placeholder="Registered company name" required>
+                                </div>
+                            </div>
                             <div class="form-group">
-                                <label for="otpEmail">Email or Phone</label>
-                                <input type="text" id="otpEmail" name="otpEmail" placeholder="Enter your email or phone number" required>
+                                <label for="importerEmail">Work Email Address</label>
+                                <input type="email" id="importerEmail" name="email" placeholder="name@company.com" required autocomplete="email">
                             </div>
-                            <div class="form-group" id="otpCodeGroup" style="display: none;">
-                                <label for="otpCode">Enter OTP</label>
-                                <input type="text" id="otpCode" name="otpCode" placeholder="Enter 6-digit OTP" maxlength="6" pattern="[0-9]{6}">
+                            <div class="form-group">
+                                <label for="importerPassword">Password</label>
+                                <div class="password-input-wrapper">
+                                    <input type="password" id="importerPassword" name="password" placeholder="Minimum 8 characters" required autocomplete="new-password">
+                                    <button type="button" class="password-toggle" onclick="togglePassword('importerPassword')" aria-label="Toggle password visibility">
+                                        <svg class="eye-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                            <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
+                                            <circle cx="12" cy="12" r="3"></circle>
+                                        </svg>
+                                    </button>
+                                </div>
+                                <div class="password-strength" id="importerPasswordStrength"></div>
                             </div>
-                            <button type="submit" class="btn-submit" id="otpLoginBtn">
-                                <span class="btn-text" id="otpBtnText">Send OTP</span>
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label for="importerCountry">Country</label>
+                                    <select id="importerCountry" name="country" required>
+                                        <option value="">Select Country</option>
+                                        <option value="IN">India</option>
+                                        <option value="US">United States</option>
+                                        <option value="GB">United Kingdom</option>
+                                        <option value="CA">Canada</option>
+                                        <option value="AU">Australia</option>
+                                        <option value="DE">Germany</option>
+                                        <option value="FR">France</option>
+                                        <option value="JP">Japan</option>
+                                        <option value="CN">China</option>
+                                        <option value="BR">Brazil</option>
+                                        <option value="MX">Mexico</option>
+                                        <option value="AE">United Arab Emirates</option>
+                                        <option value="SG">Singapore</option>
+                                        <option value="NL">Netherlands</option>
+                                        <option value="IT">Italy</option>
+                                        <option value="ES">Spain</option>
+                                        <option value="KR">South Korea</option>
+                                        <option value="SA">Saudi Arabia</option>
+                                        <option value="ZA">South Africa</option>
+                                        <option value="OTHER">Other</option>
+                                    </select>
+                                </div>
+                                <div class="form-group">
+                                    <label for="importerBusinessId">Importer Registration / IEC</label>
+                                    <input type="text" id="importerBusinessId" name="registration" placeholder="IEC / License number">
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <label for="importerAddress">Exact Warehouse / Office Address</label>
+                                <textarea id="importerAddress" name="address" rows="3" placeholder="Include street, city, state, PIN/ZIP" required></textarea>
+                            </div>
+                            <div class="form-group">
+                                <label for="importerPhone">Primary Contact Number</label>
+                                <input type="tel" id="importerPhone" name="phone" placeholder="+91 98765 43210" required>
+                            </div>
+                            <div class="form-options">
+                                <label class="checkbox-label">
+                                    <input type="checkbox" name="terms" required>
+                                    <span>I agree to the <a href="#" target="_blank">Terms & Conditions</a> and <a href="#" target="_blank">Privacy Policy</a></span>
+                                </label>
+                            </div>
+                            <button type="submit" class="btn-submit" id="importerSignupBtn">
+                                <span class="btn-text">Create Importer Account</span>
                                 <span class="btn-loader"></span>
                             </button>
                         </form>
                     </div>
-                </div>
-
-                <!-- Signup Form -->
-                <div id="signupForm" class="auth-form">
-                    <h2 class="auth-form-title">Create Account</h2>
-                    <p class="auth-form-subtitle">Join GlobalGuard Exports today</p>
-                    
-                    <form id="signupFormElement" onsubmit="handleSignup(event)">
-                        <div class="form-row">
-                            <div class="form-group">
-                                <label for="signupName">Full Name / Username</label>
-                                <input type="text" id="signupName" name="name" placeholder="Enter your full name" required autocomplete="name">
-                            </div>
-                            <div class="form-group">
-                                <label for="companyName">Company Name</label>
-                                <input type="text" id="companyName" name="company" placeholder="Enter company name" required>
-                            </div>
-                        </div>
-                        <div class="form-group">
-                            <label for="signupEmail">Email Address</label>
-                            <input type="email" id="signupEmail" name="email" placeholder="Enter your email" required autocomplete="email">
-                        </div>
-                        <div class="form-group">
-                            <label for="signupPassword">Password</label>
-                            <div class="password-input-wrapper">
-                                <input type="password" id="signupPassword" name="password" placeholder="Create a strong password" required autocomplete="new-password">
-                                <button type="button" class="password-toggle" onclick="togglePassword('signupPassword')" aria-label="Toggle password visibility">
-                                    <svg class="eye-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                        <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
-                                        <circle cx="12" cy="12" r="3"></circle>
-                                    </svg>
-                                </button>
-                            </div>
-                            <div class="password-strength" id="passwordStrength"></div>
-                        </div>
-                        <div class="form-row">
-                            <div class="form-group">
-                                <label for="country">Country</label>
-                                <select id="country" name="country" required>
-                                    <option value="">Select Country</option>
-                                    <option value="IN">India</option>
-                                    <option value="US">United States</option>
-                                    <option value="GB">United Kingdom</option>
-                                    <option value="CA">Canada</option>
-                                    <option value="AU">Australia</option>
-                                    <option value="DE">Germany</option>
-                                    <option value="FR">France</option>
-                                    <option value="JP">Japan</option>
-                                    <option value="CN">China</option>
-                                    <option value="BR">Brazil</option>
-                                    <option value="MX">Mexico</option>
-                                    <option value="AE">United Arab Emirates</option>
-                                    <option value="SG">Singapore</option>
-                                    <option value="NL">Netherlands</option>
-                                    <option value="IT">Italy</option>
-                                    <option value="ES">Spain</option>
-                                    <option value="KR">South Korea</option>
-                                    <option value="SA">Saudi Arabia</option>
-                                    <option value="ZA">South Africa</option>
-                                    <option value="OTHER">Other</option>
-                                </select>
-                            </div>
-                        </div>
-                        <div class="form-group">
-                            <label for="address">Exact Address</label>
-                            <textarea id="address" name="address" rows="3" placeholder="Enter your complete address" required></textarea>
-                        </div>
-                        <div class="form-options">
-                            <label class="checkbox-label">
-                                <input type="checkbox" name="terms" required>
-                                <span>I agree to the <a href="#" target="_blank">Terms & Conditions</a> and <a href="#" target="_blank">Privacy Policy</a></span>
-                            </label>
-                        </div>
-                        <button type="submit" class="btn-submit" id="signupBtn">
-                            <span class="btn-text">Create Account</span>
-                            <span class="btn-loader"></span>
-                        </button>
-                    </form>
                 </div>
 
                 <!-- Error/Success Messages -->
