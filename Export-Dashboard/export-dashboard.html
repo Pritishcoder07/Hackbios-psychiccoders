@@ -479,6 +479,34 @@
                             <span class="stat-value" id="typeCount">0</span>
                         </div>
                     </div>
+
+                    <!-- Document Intel Section -->
+                    <section class="documents-intel-section">
+                        <div class="document-related-section">
+                            <div class="document-related-header">
+                                <div>
+                                    <h3>Country & Port Requirements</h3>
+                                    <p>Cross-check official export/import documents per corridor using trusted government sources.</p>
+                                </div>
+                                <div class="document-related-controls">
+                                    <div class="form-group">
+                                        <label for="docCountrySelect">Country</label>
+                                        <select id="docCountrySelect" aria-label="Select country for requirements"></select>
+                                    </div>
+                                    <div class="form-group">
+                                        <label for="docModeSelect">Mode</label>
+                                        <select id="docModeSelect" aria-label="Select transport mode"></select>
+                                    </div>
+                                    <button class="btn-secondary" type="button" onclick="generateDocumentChecklist()" aria-label="Generate document checklist">
+                                        Generate Checklist
+                                    </button>
+                                </div>
+                            </div>
+
+                            <div id="docRequirementsTable" class="doc-requirements-table" role="region" aria-live="polite"></div>
+                            <div id="docChecklistResult" class="doc-checklist-result" role="status" aria-live="polite"></div>
+                        </div>
+                    </section>
                 </div>
 
                 <div class="content-section" id="analyticsSection" style="display: none;">

@@ -2759,9 +2759,506 @@ const documentTypeMap = {
     'selfie': { name: 'Verification Selfie', category: 'verification', icon: '🤳' },
 };
 
+const DOCUMENT_MODES = ['sea', 'air', 'imports', 'exports'];
+
+const countryDocumentMatrix = [
+    {
+        id: 'india',
+        name: 'India',
+        corridor: 'Nhava Sheva (JNPT), Mundra, Chennai',
+        modes: ['sea', 'air', 'exports'],
+        quickChecklist: [
+            'Commercial Invoice with HS and GST compliance – see ICEGATE valuation guidance.',
+            'Packing List carton-wise for customs inspection.',
+            'Shipping Bill submitted electronically via ICEGATE before port entry.',
+            'Carrier issued Bill of Lading or Air Waybill for proof of shipment.',
+            'Certificate of Origin from DGFT/chamber for FTA benefits (e-COO portal).',
+            'Export Declaration (GR/SDF equivalents) filed with Authorized Dealer bank per RBI rules.',
+        ],
+        requirements: [
+            { document: 'Commercial Invoice', use: 'Customs valuation, buyer payment documentation', issuer: 'Exporter / Company', linkLabel: 'ICEGATE Guidelines', linkUrl: 'https://icegate.gov.in' },
+            { document: 'Packing List', use: 'Physical examination & load planning', issuer: 'Exporter / Company', linkLabel: 'CBIC Export Procedures', linkUrl: 'https://www.cbic.gov.in' },
+            { document: 'Shipping Bill', use: 'Primary export declaration at port', issuer: 'Indian Customs via broker/exporter', linkLabel: 'ICEGATE – Shipping Bill', linkUrl: 'https://icegate.gov.in' },
+            { document: 'Bill of Lading / Air Waybill', use: 'Title transfer & shipment proof', issuer: 'Shipping line / Freight forwarder / Airline', linkLabel: 'Directorate General of Shipping', linkUrl: 'https://www.dgshipping.gov.in' },
+            { document: 'Certificate of Origin', use: 'Claim preferential duty at destination', issuer: 'DGFT / Chamber of Commerce', linkLabel: 'DGFT e-COO Portal', linkUrl: 'https://coo.dgft.gov.in' },
+            { document: 'Export Declaration (GR/SDF)', use: 'Foreign exchange compliance with RBI', issuer: 'Authorized Dealer Bank & Exporter', linkLabel: 'RBI Export FAQs', linkUrl: 'https://rbi.org.in' },
+        ],
+    },
+    {
+        id: 'united-states',
+        name: 'United States',
+        corridor: 'Ports: New York/New Jersey, Los Angeles, Savannah',
+        modes: ['sea', 'air', 'imports'],
+        quickChecklist: [
+            'Commercial Invoice with value, terms, HS code (CBP).',
+            'Packing List for CBP inspection and terminal handling.',
+            'Carrier Bill of Lading or Air Waybill for arrival notice.',
+            'ISF 10+2 security filing for ocean shipments before loading.',
+            'CBP Entry (3461/7501) filed via customs broker in ACE.',
+            'Partner agency filings (FDA/USDA) when applicable.',
+        ],
+        requirements: [
+            { document: 'Commercial Invoice', use: 'CBP customs entry & duty assessment', issuer: 'Exporter / Foreign Supplier', linkLabel: 'US CBP', linkUrl: 'https://www.cbp.gov' },
+            { document: 'Packing List', use: 'CBP inspection & deconsolidation', issuer: 'Exporter / Foreign Supplier', linkLabel: 'CBP Trade', linkUrl: 'https://www.cbp.gov/trade' },
+            { document: 'Bill of Lading / Air Waybill', use: 'Arrival notice & cargo release', issuer: 'Carrier / NVOCC / Airline', linkLabel: 'Federal Maritime Commission', linkUrl: 'https://www.fmc.gov' },
+            { document: 'ISF 10+2', use: 'Security filing for ocean cargo', issuer: 'US Importer / Customs Broker', linkLabel: 'CBP ISF 10+2', linkUrl: 'https://www.cbp.gov/border-security/ports-entry/cargo-security/importer-security-filing-102' },
+            { document: 'Customs Entry (CBP 3461/7501)', use: 'Formal import clearance', issuer: 'US Customs Broker / Importer', linkLabel: 'CBP Basic Importing', linkUrl: 'https://www.cbp.gov/trade/basic-import-export' },
+            { document: 'FDA / USDA / Partner Agency Docs', use: 'Regulatory clearance for controlled goods', issuer: 'US FDA / USDA / Relevant agency', linkLabel: 'US FDA Import Basics', linkUrl: 'https://www.fda.gov/industry/import-basics' },
+        ],
+    },
+    {
+        id: 'european-union',
+        name: 'European Union',
+        corridor: 'Ports: Rotterdam, Hamburg, Antwerp',
+        modes: ['sea', 'air', 'imports'],
+        quickChecklist: [
+            'Commercial Invoice & Packing List for customs declaration/VAT.',
+            'Carrier Bill of Lading or Air Waybill for delivery order.',
+            'ENS / ICS2 security filing before arrival.',
+            'EU SAD customs declaration lodged via broker.',
+            'EUR.1 / REX / Certificate of origin for preferential duty.',
+            'Product specific certificates (health, phytosanitary, CE).',
+        ],
+        requirements: [
+            { document: 'Commercial Invoice & Packing List', use: 'Customs declaration base, VAT & duty calc', issuer: 'Exporter', linkLabel: 'EU Taxation & Customs', linkUrl: 'https://taxation-customs.ec.europa.eu' },
+            { document: 'Bill of Lading / Air Waybill', use: 'Proof of shipment, release at port', issuer: 'Carrier / Freight Forwarder', linkLabel: 'Port of Rotterdam', linkUrl: 'https://www.portofrotterdam.com' },
+            { document: 'ENS (ICS2)', use: 'Pre-arrival safety/security filing', issuer: 'Carrier / Representative', linkLabel: 'ICS2 Security Filing', linkUrl: 'https://taxation-customs.ec.europa.eu/customs-4/customs-security/import-control-system-2-ics2_en' },
+            { document: 'EU Customs Declaration (SAD)', use: 'Release into free circulation or regimes', issuer: 'Customs Broker / Importer', linkLabel: 'EU Customs Procedures', linkUrl: 'https://taxation-customs.ec.europa.eu/customs-4/customs-procedures_en' },
+            { document: 'Certificates (EUR.1 / REX / Origin)', use: 'Preferential duty & FTA claims', issuer: 'Exporter / Competent authority', linkLabel: 'EU Preferential Origin', linkUrl: 'https://taxation-customs.ec.europa.eu/customs-4/preferential-origins_en' },
+            { document: 'Product-Specific Certificates', use: 'Health/phytosanitary/CE compliance', issuer: 'Competent Authorities / Labs', linkLabel: 'EU Sanitary Rules', linkUrl: 'https://ec.europa.eu/info/food-farming-fisheries/farming/international-cooperation/trade_en' },
+        ],
+    },
+    {
+        id: 'united-kingdom',
+        name: 'United Kingdom',
+        corridor: 'Ports: Felixstowe, Southampton, London Gateway',
+        modes: ['sea', 'air', 'imports'],
+        quickChecklist: [
+            'Commercial Invoice & Packing List per HMRC guidance.',
+            'Bill of Lading/AWB for UK Border Force release.',
+            'CDS customs declaration via broker/trader.',
+            'UK Certificate of Origin / EUR.1 from chamber when required.',
+        ],
+        requirements: [
+            { document: 'Commercial Invoice & Packing List', use: 'UK customs declaration data', issuer: 'Exporter', linkLabel: 'HMRC Customs Declaration Guidance', linkUrl: 'https://www.gov.uk/guidance/filling-in-your-customs-declaration' },
+            { document: 'Bill of Lading / Air Waybill', use: 'Evidence of carriage & release', issuer: 'Carrier / Freight Forwarder', linkLabel: 'UK Border Force', linkUrl: 'https://www.gov.uk/government/organisations/border-force' },
+            { document: 'CDS Customs Declaration', use: 'Entry into HMRC CDS system', issuer: 'Customs broker / Importer', linkLabel: 'Get access to CDS', linkUrl: 'https://www.gov.uk/guidance/get-access-to-the-customs-declaration-service' },
+            { document: 'Certificate of Origin / EUR.1', use: 'Preferential duty or buyer requirement', issuer: 'British Chambers of Commerce', linkLabel: 'British Chambers Export Docs', linkUrl: 'https://www.britishchambers.org.uk/page/export-documentation' },
+        ],
+    },
+    {
+        id: 'canada',
+        name: 'Canada',
+        corridor: 'Ports: Vancouver, Prince Rupert, Montreal',
+        modes: ['sea', 'air', 'imports'],
+        quickChecklist: [
+            'Commercial Invoice or Canada Customs Invoice (CBSA).',
+            'Packing List for CBSA / CFIA inspection.',
+            'Carrier Bill of Lading or Air Waybill.',
+            'Customs Declaration (B3) filed via broker/importer in CARM.',
+            'CUSMA/phytosanitary certificates when commodity requires.',
+        ],
+        requirements: [
+            { document: 'Commercial Invoice / Canada Customs Invoice', use: 'Import valuation & CBSA assessment', issuer: 'Exporter / Importer', linkLabel: 'CBSA Importing', linkUrl: 'https://www.cbsa-asfc.gc.ca/import/menu-eng.html' },
+            { document: 'Packing List', use: 'Inspection & de-stuffing', issuer: 'Exporter', linkLabel: 'CBSA Programs', linkUrl: 'https://www.cbsa-asfc.gc.ca/prog/ccp-pcc/menu-eng.html' },
+            { document: 'Bill of Lading / Air Waybill', use: 'Manifest & release', issuer: 'Carrier', linkLabel: 'Port of Vancouver', linkUrl: 'https://www.portvancouver.com' },
+            { document: 'Customs Declaration (B3)', use: 'Entry into Canada (CARM/CCS)', issuer: 'Customs broker / Importer', linkLabel: 'CBSA CARM', linkUrl: 'https://www.cbsa-asfc.gc.ca/prog/carm-gcra/menu-eng.html' },
+            { document: 'Certificates (CUSMA, Phyto, CFIA)', use: 'Reduced duty or sanitary clearance', issuer: 'Authorized bodies / CFIA', linkLabel: 'CFIA Import Guidance', linkUrl: 'https://inspection.canada.ca' },
+        ],
+    },
+    {
+        id: 'australia',
+        name: 'Australia',
+        corridor: 'Ports: Sydney, Melbourne, Brisbane',
+        modes: ['sea', 'air', 'imports'],
+        quickChecklist: [
+            'Commercial Invoice & Packing List (Australian Border Force).',
+            'Bill of Lading or Air Waybill for ICS filing.',
+            'Import Declaration (N10/N20) via Integrated Cargo System.',
+            'Biosecurity treatment or phytosanitary certificates (DAFF).',
+        ],
+        requirements: [
+            { document: 'Commercial Invoice & Packing List', use: 'ABF import declaration', issuer: 'Exporter', linkLabel: 'Australian Border Force', linkUrl: 'https://www.abf.gov.au/importing-exporting-and-manufacturing/importing' },
+            { document: 'Bill of Lading / Air Waybill', use: 'Manifest submission & delivery order', issuer: 'Carrier', linkLabel: 'Integrated Cargo System', linkUrl: 'https://www.abf.gov.au/help-and-support/ics' },
+            { document: 'Import Declaration (ICS)', use: 'Formal entry (N10/N20)', issuer: 'Customs broker / Importer', linkLabel: 'ICS Lodgement', linkUrl: 'https://www.abf.gov.au/help-and-support/ics' },
+            { document: 'Biosecurity Certificates', use: 'DAFF clearance (phytosanitary/treatment)', issuer: 'Department of Agriculture / Competent labs', linkLabel: 'DAFF Biosecurity', linkUrl: 'https://www.agriculture.gov.au/biosecurity-trade/import' },
+        ],
+    },
+    {
+        id: 'china',
+        name: 'China',
+        corridor: 'Ports: Shanghai, Ningbo, Shenzhen',
+        modes: ['sea', 'air', 'imports', 'exports'],
+        quickChecklist: [
+            'Commercial Invoice & Packing List aligned with GACC requirements.',
+            'Bill of Lading / Air Waybill for manifest & release.',
+            'CIQ / GACC declarations for regulated goods.',
+            'Import/Export licenses, CCC or product registrations when required.',
+        ],
+        requirements: [
+            { document: 'Commercial Invoice & Packing List', use: 'GACC customs clearance', issuer: 'Exporter', linkLabel: 'China Customs', linkUrl: 'https://english.customs.gov.cn' },
+            { document: 'Bill of Lading / Air Waybill', use: 'Manifest submission & delivery order', issuer: 'Carrier', linkLabel: 'Port of Shanghai', linkUrl: 'https://www.portshanghai.com.cn/en' },
+            { document: 'CIQ / GACC Declaration', use: 'Inspection & quarantine compliance', issuer: 'GACC / CIQ', linkLabel: 'GACC', linkUrl: 'https://www.gacc.gov.cn' },
+            { document: 'Import/Export License & CCC certificate', use: 'Market access for regulated goods', issuer: 'MOFCOM / SAMR', linkLabel: 'MOFCOM Trade', linkUrl: 'http://english.mofcom.gov.cn' },
+        ],
+    },
+    {
+        id: 'japan',
+        name: 'Japan',
+        corridor: 'Ports: Tokyo, Yokohama, Osaka',
+        modes: ['sea', 'air', 'imports'],
+        quickChecklist: [
+            'Commercial Invoice & Packing List per Japan Customs.',
+            'Bill of Lading / Air Waybill for NACCS submission.',
+            'Import Declaration via NACCS (broker).',
+            'Certificates (fumigation, agriculture, PSE) per commodity.',
+        ],
+        requirements: [
+            { document: 'Commercial Invoice & Packing List', use: 'Japan Customs entry data', issuer: 'Exporter', linkLabel: 'Japan Customs', linkUrl: 'https://www.customs.go.jp/english/index.htm' },
+            { document: 'Bill of Lading / Air Waybill', use: 'Transport evidence & NACCS filing', issuer: 'Carrier', linkLabel: 'NACCS', linkUrl: 'https://www.naccs.jp/english/' },
+            { document: 'Import Declaration', use: 'Release into Japan via NACCS', issuer: 'Customs broker / Importer', linkLabel: 'NACCS User Guide', linkUrl: 'https://www.naccs.jp/english/service/' },
+            { document: 'Certificates (PSE, Phyto, MAFF)', use: 'Commodity-specific compliance', issuer: 'MAFF / METI / Labs', linkLabel: 'MAFF Trade', linkUrl: 'https://www.maff.go.jp/e/index.html' },
+        ],
+    },
+    {
+        id: 'singapore',
+        name: 'Singapore',
+        corridor: 'Port of Singapore & Changi Airfreight Centre',
+        modes: ['sea', 'air', 'imports', 'exports'],
+        quickChecklist: [
+            'Commercial Invoice & Packing List for Singapore Customs.',
+            'Bill of Lading / Air Waybill for manifest submission in TradeNet.',
+            'Permit applications lodged via TradeNet.',
+            'Agency certificates (SFA, IMDA) for restricted goods.',
+        ],
+        requirements: [
+            { document: 'Commercial Invoice & Packing List', use: 'Baseline customs data', issuer: 'Exporter', linkLabel: 'Singapore Customs', linkUrl: 'https://www.customs.gov.sg' },
+            { document: 'Bill of Lading / Air Waybill', use: 'Manifest & delivery order', issuer: 'Carrier', linkLabel: 'MPA Singapore', linkUrl: 'https://www.mpa.gov.sg' },
+            { document: 'TradeNet Permit', use: 'Import/export permit clearance', issuer: 'Trader / Declaring agent', linkLabel: 'TradeNet', linkUrl: 'https://www.customs.gov.sg/businesses/permit-declaration' },
+            { document: 'Agency Certificates', use: 'Regulated commodities clearance (SFA, IMDA)', issuer: 'Competent agencies', linkLabel: 'Singapore Food Agency', linkUrl: 'https://www.sfa.gov.sg' },
+        ],
+    },
+    {
+        id: 'united-arab-emirates',
+        name: 'United Arab Emirates',
+        corridor: 'Ports: Jebel Ali, Khalifa Port, Dubai Airport',
+        modes: ['sea', 'air', 'imports', 'exports'],
+        quickChecklist: [
+            'Commercial Invoice & Packing List attested as per UAE customs.',
+            'Bill of Lading / Air Waybill for manifest submission.',
+            'Import/Export declarations lodged via single window (Dubai Trade).',
+            'Certificate of Origin via local chamber portals.',
+        ],
+        requirements: [
+            { document: 'Commercial Invoice & Packing List', use: 'Customs valuation & inspection', issuer: 'Exporter', linkLabel: 'Dubai Customs', linkUrl: 'https://www.dubaicustoms.gov.ae' },
+            { document: 'Bill of Lading / Air Waybill', use: 'Manifest filing & delivery order', issuer: 'Carrier', linkLabel: 'Dubai Trade', linkUrl: 'https://www.dubaitrade.ae' },
+            { document: 'Import/Export Declaration', use: 'Single window clearance', issuer: 'Trader / Broker', linkLabel: 'Dubai Trade Portal', linkUrl: 'https://www.dubaitrade.ae' },
+            { document: 'Certificate of Origin', use: 'Destination compliance / duty preference', issuer: 'Dubai Chamber / Local chambers', linkLabel: 'Dubai Chamber', linkUrl: 'https://www.dubaichamber.com' },
+        ],
+    },
+    {
+        id: 'saudi-arabia',
+        name: 'Saudi Arabia',
+        corridor: 'Ports: Jeddah Islamic Port, Dammam, Riyadh Air Cargo',
+        modes: ['sea', 'air', 'imports'],
+        quickChecklist: [
+            'Commercial Invoice & Packing List registered on FASAH.',
+            'Bill of Lading / Air Waybill uploaded through single window.',
+            'SABER/SASO certificates for regulated products.',
+            'Customs declaration filed via ZATCA.',
+        ],
+        requirements: [
+            { document: 'Commercial Invoice & Packing List', use: 'FASAH registration & customs valuation', issuer: 'Exporter', linkLabel: 'FASAH', linkUrl: 'https://www.fasah.sa/' },
+            { document: 'Bill of Lading / Air Waybill', use: 'Manifest submission', issuer: 'Carrier', linkLabel: 'Saudi Ports Authority (MAWANI)', linkUrl: 'https://www.mawani.gov.sa' },
+            { document: 'SASO / SABER Certificates', use: 'Product conformity', issuer: 'SASO certified bodies', linkLabel: 'SABER Platform', linkUrl: 'https://saber.sa' },
+            { document: 'Customs Declaration', use: 'ZATCA clearance & duty payment', issuer: 'Customs broker / Importer', linkLabel: 'ZATCA Customs', linkUrl: 'https://www.zatca.gov.sa/en/RulesRegulations/Taxes/Pages/Customs.aspx' },
+        ],
+    },
+    {
+        id: 'brazil',
+        name: 'Brazil',
+        corridor: 'Ports: Santos, Paranaguá, Rio de Janeiro',
+        modes: ['sea', 'air', 'imports'],
+        quickChecklist: [
+            'Commercial Invoice & Packing List (Portuguese translation when requested).',
+            'Bill of Lading / Air Waybill recorded in Siscomex.',
+            'Import Declaration (DI/DUIMP) via Siscomex.',
+            'ANVISA/MAPA certificates for regulated goods.',
+        ],
+        requirements: [
+            { document: 'Commercial Invoice & Packing List', use: 'Receita Federal customs entry', issuer: 'Exporter', linkLabel: 'Receita Federal', linkUrl: 'https://www.gov.br/receitafederal/pt-br' },
+            { document: 'Bill of Lading / Air Waybill', use: 'Manifest record in Siscomex', issuer: 'Carrier', linkLabel: 'Port of Santos', linkUrl: 'https://www.portodesantos.com.br' },
+            { document: 'Import Declaration (DI/DUIMP)', use: 'Formal customs clearance', issuer: 'Customs broker / Importer', linkLabel: 'Siscomex', linkUrl: 'https://www.gov.br/receitafederal/pt-br/assuntos/siscomex' },
+            { document: 'ANVISA / MAPA Certificates', use: 'Health & agriculture compliance', issuer: 'Competent agencies', linkLabel: 'ANVISA', linkUrl: 'https://www.gov.br/anvisa/pt-br' },
+        ],
+    },
+    {
+        id: 'mexico',
+        name: 'Mexico',
+        corridor: 'Ports: Manzanillo, Veracruz, Lazaro Cardenas',
+        modes: ['sea', 'air', 'imports'],
+        quickChecklist: [
+            'Commercial Invoice & Packing List per SAT guidance.',
+            'Bill of Lading / Air Waybill for pedimento filing.',
+            'Pedimento customs entry via VUCEM.',
+            'NOM/COFEPRIS/SENASICA certificates when applicable.',
+        ],
+        requirements: [
+            { document: 'Commercial Invoice & Packing List', use: 'SAT customs entry data', issuer: 'Exporter', linkLabel: 'SAT', linkUrl: 'https://www.sat.gob.mx' },
+            { document: 'Bill of Lading / Air Waybill', use: 'Pedimento reference & manifest', issuer: 'Carrier', linkLabel: 'Mexican Customs', linkUrl: 'https://www.aduanas.gob.mx' },
+            { document: 'Pedimento (Customs Entry)', use: 'Formal clearance via broker', issuer: 'Customs broker / Importer', linkLabel: 'VUCEM', linkUrl: 'https://www.ventanillaunica.gob.mx' },
+            { document: 'NOM / COFEPRIS / SENASICA Certificates', use: 'Product conformity & sanitary approvals', issuer: 'Relevant agency', linkLabel: 'COFEPRIS', linkUrl: 'https://www.gob.mx/cofepris' },
+        ],
+    },
+    {
+        id: 'south-africa',
+        name: 'South Africa',
+        corridor: 'Ports: Durban, Cape Town, Port Elizabeth',
+        modes: ['sea', 'air', 'imports'],
+        quickChecklist: [
+            'Commercial Invoice & Packing List aligned with SARS.',
+            'Bill of Lading / Air Waybill for manifest & release.',
+            'Customs Clearance (DA500/SAD 500) via broker.',
+            'Permits/certificates (DAFF, NRCS) for regulated goods.',
+        ],
+        requirements: [
+            { document: 'Commercial Invoice & Packing List', use: 'SARS customs valuation', issuer: 'Exporter', linkLabel: 'SARS Customs & Excise', linkUrl: 'https://www.sars.gov.za/customs-and-excise' },
+            { document: 'Bill of Lading / Air Waybill', use: 'Manifest, release & delivery order', issuer: 'Carrier', linkLabel: 'Transnet National Ports Authority', linkUrl: 'https://www.transnetnationalportsauthority.net' },
+            { document: 'Customs Clearance (SAD 500)', use: 'Entry into South Africa', issuer: 'Customs broker / Importer', linkLabel: 'SARS Clearance', linkUrl: 'https://www.sars.gov.za/customs-and-excise/importing-exporting' },
+            { document: 'Permits / Certificates (DAFF, NRCS)', use: 'Commodity-specific compliance', issuer: 'DAFF / NRCS', linkLabel: 'Department of Agriculture', linkUrl: 'https://www.dalrrd.gov.za' },
+        ],
+    },
+];
+
+let documentRequirementsInitialized = false;
+const documentCountryHints = {
+    iecCertificate: 'india',
+    gstCertificate: 'india',
+    companyRegistration: 'india',
+    ownerIdProof: 'india',
+    addressProof: 'india',
+    identityProof: 'united-states',
+    businessProof: 'united-states',
+    bankProof: 'united-states',
+    profilePhoto: 'united-states',
+};
+const documentModeHints = {
+    iecCertificate: 'exports',
+    gstCertificate: 'exports',
+    companyRegistration: 'exports',
+    addressProof: 'exports',
+    ownerIdProof: 'exports',
+    identityProof: 'imports',
+    businessProof: 'imports',
+    bankProof: 'imports',
+    profilePhoto: 'imports',
+};
+
 /**
  * Resolve meta info for a document type
  */
+function initializeDocumentRequirementsSection() {
+    if (documentRequirementsInitialized) return;
+
+    const countrySelect = document.getElementById('docCountrySelect');
+    const modeSelect = document.getElementById('docModeSelect');
+
+    if (!countrySelect || !modeSelect) {
+        return;
+    }
+
+    populateDocumentCountryOptions(countrySelect);
+    populateDocumentModeOptions(modeSelect);
+
+    countrySelect.addEventListener('change', () => {
+        updateDocumentRequirementsDisplay();
+        resetDocumentChecklistResult();
+    });
+
+    modeSelect.addEventListener('change', () => {
+        updateDocumentRequirementsDisplay();
+        resetDocumentChecklistResult();
+    });
+
+    updateDocumentRequirementsDisplay();
+    documentRequirementsInitialized = true;
+}
+
+function populateDocumentCountryOptions(selectEl) {
+    if (!selectEl) return;
+    selectEl.innerHTML = countryDocumentMatrix
+        .map(country => `<option value="${country.id}">${country.name}</option>`)
+        .join('');
+}
+
+function populateDocumentModeOptions(selectEl) {
+    if (!selectEl) return;
+    const options = ['all', ...DOCUMENT_MODES].map(mode => `<option value="${mode}">${formatModeLabel(mode)}</option>`);
+    selectEl.innerHTML = options.join('');
+}
+
+function updateDocumentRequirementsDisplay(presetCountryId, presetMode) {
+    const countrySelect = document.getElementById('docCountrySelect');
+    const modeSelect = document.getElementById('docModeSelect');
+    const targetCountryId = presetCountryId || countrySelect?.value || countryDocumentMatrix[0]?.id;
+    const targetMode = presetMode || modeSelect?.value || 'all';
+
+    if (countrySelect && targetCountryId) {
+        countrySelect.value = targetCountryId;
+    }
+    if (modeSelect && targetMode) {
+        modeSelect.value = targetMode;
+    }
+
+    const countryData = getCountryDataById(targetCountryId);
+    renderDocumentRequirementsTable(countryData, targetMode);
+}
+
+function getCountryDataById(countryId) {
+    return countryDocumentMatrix.find(country => country.id === countryId);
+}
+
+function renderDocumentRequirementsTable(countryData, mode) {
+    const container = document.getElementById('docRequirementsTable');
+    if (!container) return;
+
+    if (!countryData) {
+        container.innerHTML = `<div class="doc-empty-state">We couldn't find requirements for the selected country yet. Please choose another option.</div>`;
+        return;
+    }
+
+    if (mode && mode !== 'all' && !countryData.modes.includes(mode)) {
+        container.innerHTML = `<div class="doc-empty-state">We haven't mapped ${formatModeLabel(mode)} requirements for ${countryData.name} yet. Try another mode.</div>`;
+        return;
+    }
+
+    const rows = countryData.requirements.map(req => `
+        <tr>
+            <td>${req.document}</td>
+            <td>${req.use}</td>
+            <td>${req.issuer}</td>
+            <td>
+                ${req.linkUrl ? `<a href="${req.linkUrl}" target="_blank" rel="noopener">${req.linkLabel || 'Official Link'}</a>` : '-'}
+            </td>
+        </tr>
+    `).join('');
+
+    container.innerHTML = `
+        <div class="doc-table-card">
+            <div class="doc-table-card-head">
+                <div>
+                    <h4>${countryData.name}</h4>
+                    <p>${countryData.corridor || ''}</p>
+                </div>
+                <span class="doc-table-badge">${formatModeLabel(mode)}</span>
+            </div>
+            <div class="doc-requirements-table">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Document</th>
+                            <th>Typical Use</th>
+                            <th>Issuer</th>
+                            <th>Official Link</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        ${rows}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    `;
+}
+
+function formatModeLabel(mode) {
+    if (!mode || mode === 'all') return 'All Modes';
+    const labels = {
+        sea: 'Sea Freight',
+        air: 'Air Freight',
+        imports: 'Imports',
+        exports: 'Exports',
+    };
+    return labels[mode] || mode.charAt(0).toUpperCase() + mode.slice(1);
+}
+
+function resetDocumentChecklistResult() {
+    const checklistEl = document.getElementById('docChecklistResult');
+    if (checklistEl) {
+        checklistEl.classList.remove('active');
+        checklistEl.textContent = '';
+    }
+}
+
+function generateDocumentChecklist() {
+    const countrySelect = document.getElementById('docCountrySelect');
+    const modeSelect = document.getElementById('docModeSelect');
+    const checklistEl = document.getElementById('docChecklistResult');
+
+    if (!countrySelect || !modeSelect || !checklistEl) return;
+
+    const countryData = getCountryDataById(countrySelect.value);
+    const selectedMode = modeSelect.value;
+
+    if (!countryData) {
+        checklistEl.innerHTML = 'Select a country to see the quick checklist.';
+        checklistEl.classList.add('active');
+        return;
+    }
+
+    if (selectedMode !== 'all' && !countryData.modes.includes(selectedMode)) {
+        checklistEl.innerHTML = `We have not mapped ${formatModeLabel(selectedMode)} workflows for ${countryData.name}. Try another mode.`;
+        checklistEl.classList.add('active');
+        return;
+    }
+
+    const items = countryData.quickChecklist || [];
+    if (!items.length) {
+        checklistEl.innerHTML = 'Checklist will be available soon.';
+        checklistEl.classList.add('active');
+        return;
+    }
+
+    const listHtml = items.map(item => `<li>${item}</li>`).join('');
+    checklistEl.innerHTML = `
+        <h4>Checklist for ${countryData.name} (${formatModeLabel(selectedMode)})</h4>
+        <ul>${listHtml}</ul>
+        <p style="margin-top: 0.5rem; font-size: 0.85rem; color: var(--color-text-tertiary);">
+            Source: Official customs, trade and partner agency portals linked above.
+        </p>
+    `;
+    checklistEl.classList.add('active');
+}
+
+function syncDocumentRequirementsContext(doc) {
+    if (!doc) return;
+    initializeDocumentRequirementsSection();
+
+    const countrySelect = document.getElementById('docCountrySelect');
+    const modeSelect = document.getElementById('docModeSelect');
+
+    if (!countrySelect || !modeSelect) return;
+
+    let updated = false;
+
+    const hintedCountry = documentCountryHints[doc.type];
+    if (hintedCountry && countrySelect.value !== hintedCountry && getCountryDataById(hintedCountry)) {
+        countrySelect.value = hintedCountry;
+        updated = true;
+    }
+
+    const hintedMode = documentModeHints[doc.type];
+    if (hintedMode && modeSelect.value !== hintedMode) {
+        modeSelect.value = hintedMode;
+        updated = true;
+    }
+
+    if (updated) {
+        updateDocumentRequirementsDisplay(countrySelect.value, modeSelect.value);
+        resetDocumentChecklistResult();
+    }
+}
+
 function getDocumentTypeInfo(docType, fallbackName = '') {
     return documentTypeMap[docType] || {
         name: fallbackName || docType,
@@ -2939,6 +3436,8 @@ function initializeDocumentsModule() {
     if (documentFilter) {
         documentFilter.addEventListener('change', handleDocumentFilter);
     }
+
+    initializeDocumentRequirementsSection();
 }
 
 /**
@@ -3208,6 +3707,7 @@ function openDocumentDetail(docId) {
     if (!doc) return;
 
     currentDocument = doc;
+    syncDocumentRequirementsContext(doc);
     const modal = document.getElementById('documentDetailModal');
     
     if (!modal) return;

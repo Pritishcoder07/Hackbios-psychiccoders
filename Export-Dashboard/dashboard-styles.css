@@ -2419,6 +2419,187 @@ input[type="file"] {
     line-height: 1.6;
 }
 
+.document-related-section {
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-xl);
+    padding: var(--spacing-lg);
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-lg);
+    background: var(--color-bg-tertiary);
+}
+
+.document-related-header {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--spacing-lg);
+    justify-content: space-between;
+    align-items: flex-start;
+}
+
+.document-related-header h3 {
+    font-size: var(--font-size-lg);
+    margin-bottom: var(--spacing-xs);
+}
+
+.document-related-header p {
+    color: var(--color-text-secondary);
+    max-width: 420px;
+    line-height: 1.5;
+}
+
+.document-related-controls {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--spacing-md);
+    align-items: flex-end;
+}
+
+.document-related-controls .form-group {
+    display: flex;
+    flex-direction: column;
+    gap: 0.35rem;
+    min-width: 180px;
+}
+
+.document-related-controls label {
+    font-size: var(--font-size-sm);
+    color: var(--color-text-secondary);
+}
+
+.document-related-controls select {
+    padding: 0.6rem 0.85rem;
+    border-radius: var(--radius-lg);
+    border: 1px solid var(--color-border);
+    background: var(--color-bg-primary);
+    font-size: var(--font-size-sm);
+}
+
+.document-related-controls .btn-secondary {
+    height: 42px;
+}
+
+.doc-table-card {
+    background: var(--color-bg-primary);
+    border-radius: var(--radius-xl);
+    border: 1px solid var(--color-border-light);
+    box-shadow: var(--shadow-xs);
+    padding: var(--spacing-lg);
+    margin-bottom: var(--spacing-lg);
+}
+
+.doc-table-card-head {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: var(--spacing-lg);
+    margin-bottom: var(--spacing-md);
+}
+
+.doc-table-card-head h4 {
+    font-size: var(--font-size-lg);
+    margin-bottom: var(--spacing-2xs);
+}
+
+.doc-table-card-head p {
+    font-size: var(--font-size-sm);
+    color: var(--color-text-tertiary);
+}
+
+.doc-table-badge {
+    padding: 0.35rem 0.85rem;
+    border-radius: 999px;
+    background: rgba(37, 99, 235, 0.08);
+    color: var(--color-primary-dark);
+    font-size: var(--font-size-xs);
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+}
+
+.doc-requirements-table {
+    width: 100%;
+    border-radius: var(--radius-xl);
+    border: 1px solid var(--color-border-light);
+    overflow: hidden;
+    background: var(--color-bg-primary);
+}
+
+.doc-requirements-table table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+.doc-requirements-table th,
+.doc-requirements-table td {
+    padding: 0.85rem 1rem;
+    border-bottom: 1px solid var(--color-border-light);
+    text-align: left;
+    font-size: var(--font-size-sm);
+}
+
+.doc-requirements-table th {
+    background: var(--color-bg-secondary);
+    font-weight: 600;
+    color: var(--color-text-secondary);
+}
+
+.doc-requirements-table tbody tr:nth-child(even) {
+    background: var(--color-bg-secondary);
+}
+
+.doc-requirements-table a {
+    color: var(--color-primary);
+    text-decoration: none;
+    font-weight: 500;
+}
+
+.doc-requirements-table a:hover,
+.doc-requirements-table a:focus {
+    text-decoration: underline;
+}
+
+.doc-empty-state {
+    padding: var(--spacing-md);
+    border-radius: var(--radius-lg);
+    border: 1px dashed var(--color-border);
+    color: var(--color-text-secondary);
+    background: rgba(59, 130, 246, 0.05);
+    font-size: var(--font-size-sm);
+}
+
+.doc-checklist-result {
+    border-radius: var(--radius-xl);
+    border: 1px dashed var(--color-border);
+    padding: var(--spacing-md);
+    background: var(--color-bg-primary);
+    font-size: var(--font-size-sm);
+    color: var(--color-text-secondary);
+    display: none;
+}
+
+.doc-checklist-result.active {
+    display: block;
+}
+
+.doc-checklist-result h4 {
+    font-size: var(--font-size-base);
+    font-weight: 600;
+    margin-bottom: var(--spacing-xs);
+}
+
+.doc-checklist-result ul {
+    margin-left: 1.2rem;
+    margin-top: var(--spacing-xs);
+    display: flex;
+    flex-direction: column;
+    gap: 0.35rem;
+}
+
+.documents-intel-section {
+    margin-top: var(--spacing-2xl);
+}
+
 /* Responsive Documents */
 @media (max-width: 968px) {
     .documents-header {
@@ -2463,6 +2644,23 @@ input[type="file"] {
 
     .documents-stats {
         grid-template-columns: repeat(2, 1fr);
+    }
+
+    .document-related-header {
+        flex-direction: column;
+    }
+
+    .document-related-controls {
+        width: 100%;
+    }
+
+    .document-related-controls .form-group {
+        width: 100%;
+    }
+
+    .document-related-controls select,
+    .document-related-controls .btn-secondary {
+        width: 100%;
     }
 }
 
