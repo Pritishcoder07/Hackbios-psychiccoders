@@ -239,8 +239,173 @@
                 </div>
 
                 <div class="content-section" id="insuranceSection" style="display: none;">
-                    <h2>Insurance</h2>
-                    <p>View and manage your insurance policies.</p>
+                    <section class="insurance-panel insurance-glass">
+                        <h2>Shipment Insurance</h2>
+                        <form id="shipment-form" class="insurance-form-grid">
+                            <label>
+                                Goods category
+                                <select name="goodsType" required>
+                                    <option value="">Select type</option>
+                                    <option value="electronics">Consumer electronics</option>
+                                    <option value="pharmaceuticals">Pharmaceuticals</option>
+                                    <option value="perishables">Perishables / cold chain</option>
+                                    <option value="automotive">Automotive components</option>
+                                    <option value="machinery">Heavy machinery</option>
+                                    <option value="textiles">Textiles & apparel</option>
+                                    <option value="bulk">Bulk commodities</option>
+                                </select>
+                            </label>
+
+                            <label>
+                                Shipment value (USD)
+                                <input
+                                    type="number"
+                                    name="shipmentValue"
+                                    min="1000"
+                                    step="500"
+                                    placeholder="e.g. 250000"
+                                    required
+                                />
+                            </label>
+
+                            <label>
+                                Origin country
+                                <select id="insurance-origin-country" name="originCountry" data-port-target="insurance-origin-port" required>
+                                    <option value="">Select country</option>
+                                </select>
+                            </label>
+
+                            <label>
+                                Origin port
+                                <select
+                                    id="insurance-origin-port"
+                                    name="originPort"
+                                    data-manual-input="insurance-origin-port-manual"
+                                    disabled
+                                    required
+                                >
+                                    <option value="">Select port</option>
+                                </select>
+                                <input
+                                    type="text"
+                                    id="insurance-origin-port-manual"
+                                    class="manual-port"
+                                    placeholder="Enter origin port / UNLOCODE"
+                                    hidden
+                                />
+                            </label>
+
+                            <label>
+                                Destination country
+                                <select
+                                    id="insurance-destination-country"
+                                    name="destinationCountry"
+                                    data-port-target="insurance-destination-port"
+                                    required
+                                >
+                                    <option value="">Select country</option>
+                                </select>
+                            </label>
+
+                            <label>
+                                Destination port
+                                <select
+                                    id="insurance-destination-port"
+                                    name="destinationPort"
+                                    data-manual-input="insurance-destination-port-manual"
+                                    disabled
+                                    required
+                                >
+                                    <option value="">Select port</option>
+                                </select>
+                                <input
+                                    type="text"
+                                    id="insurance-destination-port-manual"
+                                    class="manual-port"
+                                    placeholder="Enter destination port / UNLOCODE"
+                                    hidden
+                                />
+                            </label>
+
+                            <label>
+                                Transport mode
+                                <select name="transportMode" required>
+                                    <option value="sea">Ocean freight</option>
+                                    <option value="air">Air freight</option>
+                                    <option value="road">Road</option>
+                                    <option value="rail">Rail</option>
+                                </select>
+                            </label>
+
+                            <label>
+                                Risk tolerance
+                                <select name="riskProfile" required>
+                                    <option value="balanced">Balanced</option>
+                                    <option value="conservative">Conservative</option>
+                                    <option value="aggressive">Cost focused</option>
+                                </select>
+                            </label>
+
+                            <label class="insurance-span-2">
+                                Additional notes
+                                <textarea
+                                    name="notes"
+                                    rows="2"
+                                    placeholder="Any packaging specifics, temperature control, high theft risk, etc."
+                                ></textarea>
+                            </label>
+
+                            <button id="insurance-submit-btn" class="insurance-primary insurance-span-2" type="submit">
+                                Find best-fit insurance
+                            </button>
+                        </form>
+                    </section>
+
+                    <section class="insurance-panel">
+                        <header class="insurance-panel-header">
+                            <div>
+                                <h2>Recommended cover</h2>
+                                <p class="insurance-subtitle">
+                                    Ranked suggestions based on coverage fit, trade lane appetite, and
+                                    premium efficiency.
+                                </p>
+                            </div>
+                            <button id="insurance-export-btn" class="insurance-ghost">Export results</button>
+                        </header>
+                        <div id="insurance-results" class="insurance-results-list empty">
+                            <p>
+                                Complete the form to view tailored marine insurance suggestions and
+                                underwriting rationale.
+                            </p>
+                        </div>
+                    </section>
+
+                    <section class="insurance-panel insurance-secondary">
+                        <h2>How insurance scoring works</h2>
+                        <div class="insurance-score-grid">
+                            <article>
+                                <h3>Coverage adequacy</h3>
+                                <p>
+                                    Matches the declared value and commodity risk level to available
+                                    clauses (ICC A/B/C) and bespoke riders.
+                                </p>
+                            </article>
+                            <article>
+                                <h3>Trade lane appetite</h3>
+                                <p>
+                                    Checks carrier comfort with the origin / destination pair and recent
+                                    loss ratios for that corridor.
+                                </p>
+                            </article>
+                            <article>
+                                <h3>Premium efficiency</h3>
+                                <p>
+                                    Balances total insured value, deductible appetite, and optional
+                                    add-ons to keep per-shipment cost competitive.
+                                </p>
+                            </article>
+                        </div>
+                    </section>
                 </div>
 
                 <div class="content-section" id="shipmentsSection" style="display: none;">
@@ -254,8 +419,66 @@
                 </div>
 
                 <div class="content-section" id="documentsSection" style="display: none;">
-                    <h2>Documents</h2>
-                    <p>View and manage your documents.</p>
+                    <div class="documents-header">
+                        <div class="documents-title">
+                            <h2>Document Library</h2>
+                            <p>All documents uploaded from your profile and shipments</p>
+                        </div>
+                        <div class="documents-actions">
+                            <div class="documents-search">
+                                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <circle cx="11" cy="11" r="8"></circle>
+                                    <path d="m21 21-4.35-4.35"></path>
+                                </svg>
+                                <input type="text" id="documentSearch" placeholder="Search documents...">
+                            </div>
+                            <select id="documentFilter" class="documents-filter">
+                                <option value="">All Documents</option>
+                                <option value="iec">IEC Certificate</option>
+                                <option value="gst">GST Certificate</option>
+                                <option value="company">Company Registration</option>
+                                <option value="idproof">ID Proof</option>
+                                <option value="addressproof">Address Proof</option>
+                                <option value="bankstatement">Bank Statement</option>
+                                <option value="canchelaque">Cancelled Cheque</option>
+                                <option value="insurance">Insurance</option>
+                                <option value="invoice">Invoice</option>
+                                <option value="other">Other</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <!-- Loading State -->
+                    <div id="documentsLoading" class="documents-loading" style="display: none;">
+                        <div class="loading-spinner"></div>
+                        <p>Loading documents...</p>
+                    </div>
+
+                    <!-- Empty State -->
+                    <div id="documentsEmpty" class="documents-empty">
+                        <div class="empty-icon">📄</div>
+                        <h3>No documents yet</h3>
+                        <p>Documents you upload from your profile will appear here</p>
+                    </div>
+
+                    <!-- Documents Grid -->
+                    <div id="documentsGrid" class="documents-grid" style="display: none;"></div>
+
+                    <!-- Statistics -->
+                    <div id="documentsStats" class="documents-stats" style="display: none;">
+                        <div class="stat">
+                            <span class="stat-label">Total Documents</span>
+                            <span class="stat-value" id="totalDocuments">0</span>
+                        </div>
+                        <div class="stat">
+                            <span class="stat-label">Total Size</span>
+                            <span class="stat-value" id="totalSize">0 MB</span>
+                        </div>
+                        <div class="stat">
+                            <span class="stat-label">Document Types</span>
+                            <span class="stat-value" id="typeCount">0</span>
+                        </div>
+                    </div>
                 </div>
 
                 <div class="content-section" id="analyticsSection" style="display: none;">
@@ -879,6 +1102,79 @@
                     <div class="status-icon">✓</div>
                     <h3>Verification Complete</h3>
                     <p id="callEndedMessage">Your verification is being processed. You will be notified once it's complete.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Document Preview/Detail Modal -->
+    <div id="documentDetailModal" class="document-detail-modal" role="dialog" aria-labelledby="documentDetailTitle" aria-hidden="true">
+        <div class="document-detail-overlay" onclick="closeDocumentDetail()"></div>
+        <div class="document-detail-container">
+            <button class="document-detail-close" onclick="closeDocumentDetail()" aria-label="Close modal">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <line x1="18" y1="6" x2="6" y2="18"></line>
+                    <line x1="6" y1="6" x2="18" y2="18"></line>
+                </svg>
+            </button>
+
+            <div class="document-detail-content">
+                <!-- Preview Area -->
+                <div class="document-preview-area" id="documentPreviewArea">
+                    <div class="document-preview-image" id="documentPreviewImage"></div>
+                </div>
+
+                <!-- Document Info -->
+                <div class="document-detail-info">
+                    <div class="document-detail-header">
+                        <div>
+                            <h2 id="documentDetailTitle">Document Name</h2>
+                            <p id="documentDetailType" class="document-type-badge">Type</p>
+                        </div>
+                        <div class="document-detail-actions">
+                            <button class="btn-download" onclick="downloadDocument()" title="Download">
+                                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                                    <polyline points="7 10 12 15 17 10"></polyline>
+                                    <line x1="12" y1="15" x2="12" y2="3"></line>
+                                </svg>
+                                Download
+                            </button>
+                            <button class="btn-delete" id="documentDeleteButton" onclick="deleteDocument()" title="Delete">
+                                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <polyline points="3 6 5 6 21 6"></polyline>
+                                    <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
+                                    <line x1="10" y1="11" x2="10" y2="17"></line>
+                                    <line x1="14" y1="11" x2="14" y2="17"></line>
+                                </svg>
+                                Delete
+                            </button>
+                        </div>
+                    </div>
+
+                    <div class="document-detail-meta">
+                        <div class="meta-item">
+                            <span class="meta-label">File Size</span>
+                            <span class="meta-value" id="documentSize">-</span>
+                        </div>
+                        <div class="meta-item">
+                            <span class="meta-label">Uploaded</span>
+                            <span class="meta-value" id="documentDate">-</span>
+                        </div>
+                        <div class="meta-item">
+                            <span class="meta-label">File Type</span>
+                            <span class="meta-value" id="documentFileType">-</span>
+                        </div>
+                        <div class="meta-item">
+                            <span class="meta-label">Status</span>
+                            <span class="meta-value" id="documentStatus">-</span>
+                        </div>
+                    </div>
+
+                    <div class="document-detail-description">
+                        <h4>Details</h4>
+                        <p id="documentDescription">No additional information available.</p>
+                    </div>
                 </div>
             </div>
         </div>

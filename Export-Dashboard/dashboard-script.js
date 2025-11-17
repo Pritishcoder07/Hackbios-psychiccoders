@@ -2132,3 +2132,1266 @@ function closeVideoCallModal() {
     if (remoteVideo) remoteVideo.srcObject = null;
 }
 
+// ============================================
+// INSURANCE MODULE
+// ============================================
+
+const insurancePortDirectory = {
+  AE: {
+    label: "United Arab Emirates",
+    ports: [
+      { slug: "dubai", label: "Jebel Ali, Dubai (AEDXB)" },
+      { slug: "abu-dhabi", label: "Abu Dhabi (AEAUH)" },
+      { slug: "jebel-ali", label: "Jebel Ali (AEJEA)" },
+    ],
+  },
+  AU: {
+    label: "Australia",
+    ports: [
+      { slug: "melbourne", label: "Melbourne (AUMEL)" },
+      { slug: "sydney", label: "Sydney (AUSYD)" },
+    ],
+  },
+  BE: {
+    label: "Belgium",
+    ports: [
+      { slug: "antwerp", label: "Antwerp (BEANR)" },
+      { slug: "zeebrugge", label: "Zeebrugge (BEZEE)" },
+    ],
+  },
+  BR: {
+    label: "Brazil",
+    ports: [
+      { slug: "santos", label: "Santos (BRSSZ)" },
+      { slug: "rio-de-janeiro", label: "Rio de Janeiro (BRRIO)" },
+    ],
+  },
+  CN: {
+    label: "China",
+    ports: [
+      { slug: "shanghai", label: "Shanghai (CNSHA)" },
+      { slug: "tianjin", label: "Tianjin (CNTJG)" },
+      { slug: "ningbo", label: "Ningbo (CNNGB)" },
+    ],
+  },
+  DE: {
+    label: "Germany",
+    ports: [
+      { slug: "hamburg", label: "Hamburg (DEHAM)" },
+      { slug: "bremerhaven", label: "Bremerhaven (DEBRV)" },
+    ],
+  },
+  ES: {
+    label: "Spain",
+    ports: [
+      { slug: "valencia", label: "Valencia (ESVLC)" },
+      { slug: "barcelona", label: "Barcelona (ESBCN)" },
+    ],
+  },
+  IN: {
+    label: "India",
+    ports: [
+      { slug: "mumbai", label: "Mumbai (INBOM)" },
+      { slug: "chennai", label: "Chennai (INMAA)" },
+      { slug: "vizag", label: "Visakhapatnam (INVTZ)" },
+      { slug: "kolkata", label: "Kolkata (INCCU)" },
+    ],
+  },
+  LK: {
+    label: "Sri Lanka",
+    ports: [{ slug: "colombo", label: "Colombo (LKCMB)" }],
+  },
+  MY: {
+    label: "Malaysia",
+    ports: [
+      { slug: "tanjung-pelepas", label: "Tanjung Pelepas (MYTPP)" },
+      { slug: "port-klang", label: "Port Klang (MYPKG)" },
+    ],
+  },
+  NL: {
+    label: "Netherlands",
+    ports: [
+      { slug: "rotterdam", label: "Rotterdam (NLRTM)" },
+      { slug: "amsterdam", label: "Amsterdam (NLAMS)" },
+    ],
+  },
+  OM: {
+    label: "Oman",
+    ports: [{ slug: "salalah", label: "Salalah (OMSLL)" }],
+  },
+  SG: {
+    label: "Singapore",
+    ports: [{ slug: "singapore", label: "Singapore (SGSIN)" }],
+  },
+  US: {
+    label: "United States",
+    ports: [
+      { slug: "los-angeles", label: "Los Angeles (USLAX)" },
+      { slug: "long-beach", label: "Long Beach (USLGB)" },
+      { slug: "new-york", label: "New York / NJ (USNYC)" },
+      { slug: "miami", label: "Miami (USMIA)" },
+      { slug: "chicago", label: "Chicago (USCHI)" },
+    ],
+  },
+  ZA: {
+    label: "South Africa",
+    ports: [
+      { slug: "durban", label: "Durban (ZADUR)" },
+      { slug: "cape-town", label: "Cape Town (ZACPT)" },
+    ],
+  },
+};
+
+const insuranceFallbackCountries = [
+  { value: "AE", label: "United Arab Emirates" },
+  { value: "AU", label: "Australia" },
+  { value: "BE", label: "Belgium" },
+  { value: "BR", label: "Brazil" },
+  { value: "CN", label: "China" },
+  { value: "DE", label: "Germany" },
+  { value: "ES", label: "Spain" },
+  { value: "IN", label: "India" },
+  { value: "LK", label: "Sri Lanka" },
+  { value: "MY", label: "Malaysia" },
+  { value: "NL", label: "Netherlands" },
+  { value: "OM", label: "Oman" },
+  { value: "SG", label: "Singapore" },
+  { value: "US", label: "United States" },
+  { value: "ZA", label: "South Africa" },
+];
+
+const insuranceCatalogue = [
+  {
+    id: "atlas-icc-a",
+    provider: "Atlas Marine Mutual",
+    product: "Blue Shield ICC (A)",
+    url: "https://www.agcs.allianz.com/solutions/marine-cargo-insurance.html",
+    coverage: ["ICC A", "War", "SRCC", "Temperature", "High-Value"],
+    supportedGoods: ["electronics", "pharmaceuticals", "perishables", "machinery"],
+    minValue: 50000,
+    maxValue: 5000000,
+    appetite: {
+      ports: ["singapore", "rotterdam", "dubai", "mumbai", "los-angeles", "new-york"],
+      modes: ["sea", "air"],
+    },
+    basePremiumRate: 0.42,
+    rating: 4.7,
+    notes: "Prefers high-value electronics and pharma with airtight packaging proof.",
+  },
+  {
+    id: "harborline-tier2",
+    provider: "HarborLine Syndicate",
+    product: "Tier 2 Global Cargo (ICC B)",
+    url: "https://www.lloyds.com/solutions/marine",
+    coverage: ["ICC B", "General Average", "War"],
+    supportedGoods: ["machinery", "automotive", "textiles", "bulk"],
+    minValue: 20000,
+    maxValue: 2500000,
+    appetite: {
+      ports: ["antwerp", "hamburg", "chennai", "tanjung-pelepas", "long-beach"],
+      modes: ["sea", "rail"],
+    },
+    basePremiumRate: 0.28,
+    rating: 4.3,
+    notes: "Competitive for industrial cargo, requires survey for >USD 2M.",
+  },
+  {
+    id: "aerosecure-air",
+    provider: "AeroSecure Underwriting",
+    product: "Just-in-Time Air Hull",
+    url: "https://www.chubb.com/us-en/businesses/resources/aerospace-insurance.html",
+    coverage: ["ICC Air", "High-Value", "Delay"],
+    supportedGoods: ["electronics", "pharmaceuticals", "automotive"],
+    minValue: 10000,
+    maxValue: 1500000,
+    appetite: { ports: ["dubai", "hamburg", "chicago", "shanghai"], modes: ["air"] },
+    basePremiumRate: 0.65,
+    rating: 4.8,
+    notes: "Includes expedited claims on temp-controlled air freight.",
+  },
+  {
+    id: "evertrust-perishables",
+    provider: "Evertrust",
+    product: "ColdLink ICC (A) + TempGuard",
+    url: "https://www.msig.com.sg/business/solutions/marine/marine-cargo-insurance",
+    coverage: ["ICC A", "Temperature", "Contamination"],
+    supportedGoods: ["perishables", "pharmaceuticals", "bulk"],
+    minValue: 15000,
+    maxValue: 1200000,
+    appetite: {
+      ports: ["valencia", "rotterdam", "miami", "jebel-ali", "melbourne"],
+      modes: ["sea", "air", "road"],
+    },
+    basePremiumRate: 0.58,
+    rating: 4.6,
+    notes: "Requires IoT telemetry for temp excursions coverage to apply.",
+  },
+  {
+    id: "terra-icc-c",
+    provider: "Terra Assurance",
+    product: "Economy ICC (C)",
+    url: "https://axaxl.com/insurance/coverages/marine-cargo",
+    coverage: ["ICC C", "General Average"],
+    supportedGoods: ["bulk", "textiles", "machinery"],
+    minValue: 5000,
+    maxValue: 800000,
+    appetite: {
+      ports: ["colombo", "salalah", "vizag", "durban", "santos"],
+      modes: ["sea", "road"],
+    },
+    basePremiumRate: 0.14,
+    rating: 3.9,
+    notes: "Value option for shippers with higher deductible appetite.",
+  },
+];
+
+/**
+ * Initialize insurance module when insurance tab is opened
+ */
+function initializeInsuranceModule() {
+    const insuranceForm = document.getElementById('shipment-form');
+    if (!insuranceForm) return;
+    
+    loadInsuranceCountryOptions();
+    setupInsuranceEventListeners();
+}
+
+/**
+ * Load country options for insurance form
+ */
+async function loadInsuranceCountryOptions() {
+    try {
+        const response = await fetch("https://restcountries.com/v3.1/all?fields=name,cca2");
+        if (!response.ok) throw new Error("Country fetch failed");
+        const payload = await response.json();
+        const countries = payload
+            .map((country) => ({
+                value: country.cca2,
+                label: country.name?.common ?? country.cca2,
+            }))
+            .sort((a, b) => a.label.localeCompare(b.label));
+        populateInsuranceCountrySelects(countries);
+    } catch (error) {
+        console.warn("Using fallback country list for insurance", error);
+        populateInsuranceCountrySelects(insuranceFallbackCountries);
+    }
+}
+
+/**
+ * Populate insurance country selects
+ */
+function populateInsuranceCountrySelects(countries) {
+    const countrySelects = document.querySelectorAll('[data-port-target*="insurance"]');
+    countrySelects.forEach((select) => {
+        const options = countries.map(({ value, label }) => `<option value="${value}">${label}</option>`).join("");
+        select.insertAdjacentHTML("beforeend", options);
+    });
+    
+    setupInsurancePortHandlers();
+}
+
+/**
+ * Setup insurance port handlers
+ */
+function setupInsurancePortHandlers() {
+    const originCountrySelect = document.getElementById('insurance-origin-country');
+    const destinationCountrySelect = document.getElementById('insurance-destination-country');
+    
+    if (originCountrySelect) {
+        originCountrySelect.addEventListener('change', (e) => {
+            updateInsurancePortOptions('insurance-origin-port', e.target.value);
+        });
+    }
+    
+    if (destinationCountrySelect) {
+        destinationCountrySelect.addEventListener('change', (e) => {
+            updateInsurancePortOptions('insurance-destination-port', e.target.value);
+        });
+    }
+}
+
+/**
+ * Update insurance port options based on country
+ */
+function updateInsurancePortOptions(portSelectId, countryKey) {
+    const portSelect = document.getElementById(portSelectId);
+    if (!portSelect) return;
+    
+    portSelect.innerHTML = '<option value="">Select port</option>';
+    portSelect.disabled = true;
+    resetInsurancePortInput(portSelectId);
+    
+    if (!countryKey) return;
+    
+    const directory = insurancePortDirectory[countryKey];
+    const ports = directory?.ports || [];
+    
+    ports.forEach((port) => {
+        const option = document.createElement('option');
+        option.value = port.slug;
+        option.textContent = port.label;
+        portSelect.appendChild(option);
+    });
+    
+    const manualOption = document.createElement('option');
+    manualOption.value = '__manual';
+    manualOption.textContent = 'Other / not listed';
+    portSelect.appendChild(manualOption);
+    
+    portSelect.disabled = false;
+    
+    portSelect.addEventListener('change', (e) => {
+        if (e.target.value === '__manual') {
+            toggleInsuranceManualPort(portSelectId, true);
+        } else {
+            toggleInsuranceManualPort(portSelectId, false);
+        }
+    });
+}
+
+/**
+ * Toggle insurance manual port input
+ */
+function toggleInsuranceManualPort(portSelectId, active) {
+    const manualInputId = portSelectId + '-manual';
+    const manualInput = document.getElementById(manualInputId);
+    const portSelect = document.getElementById(portSelectId);
+    
+    if (!manualInput) return;
+    
+    if (active) {
+        manualInput.hidden = false;
+        manualInput.required = true;
+        portSelect.required = false;
+    } else {
+        manualInput.hidden = true;
+        manualInput.required = false;
+        manualInput.value = '';
+        portSelect.required = true;
+    }
+}
+
+/**
+ * Reset insurance port input
+ */
+function resetInsurancePortInput(portSelectId) {
+    const manualInputId = portSelectId + '-manual';
+    const manualInput = document.getElementById(manualInputId);
+    
+    if (manualInput) {
+        manualInput.hidden = true;
+        manualInput.required = false;
+        manualInput.value = '';
+    }
+}
+
+/**
+ * Resolve insurance port selection
+ */
+function resolveInsurancePortSelection(portSelectId) {
+    const portSelect = document.getElementById(portSelectId);
+    const manualInputId = portSelectId + '-manual';
+    const manualInput = document.getElementById(manualInputId);
+    
+    if (portSelect && portSelect.value && portSelect.value !== '__manual') {
+        return {
+            value: portSelect.value,
+            label: portSelect.selectedOptions[0]?.textContent || '',
+        };
+    }
+    
+    if (manualInput && !manualInput.hidden && manualInput.value.trim()) {
+        const label = manualInput.value.trim();
+        return {
+            value: label.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, ''),
+            label: label,
+        };
+    }
+    
+    return { value: '', label: '' };
+}
+
+/**
+ * Score insurance based on shipment profile
+ */
+function scoreInsuranceProduct(shipment, product) {
+    let score = 0;
+    const reasons = [];
+    
+    if (product.supportedGoods.includes(shipment.goodsType)) {
+        score += 25;
+        reasons.push("Commodity appetite aligned.");
+    }
+    
+    if (shipment.shipmentValue >= product.minValue && shipment.shipmentValue <= product.maxValue) {
+        score += 20;
+        reasons.push("Declared value within underwriting band.");
+    } else if (shipment.shipmentValue <= product.maxValue * 1.2) {
+        score += 8;
+        reasons.push("Value slightly outside band; manual approval likely.");
+    }
+    
+    const lanes = product.appetite.ports;
+    const matchedPorts = [];
+    if (shipment.originPort && lanes.includes(shipment.originPort)) {
+        matchedPorts.push(shipment.originPortLabel || "origin port");
+    }
+    if (shipment.destinationPort && lanes.includes(shipment.destinationPort)) {
+        matchedPorts.push(shipment.destinationPortLabel || "destination port");
+    }
+    if (matchedPorts.length) {
+        score += matchedPorts.length === 2 ? 20 : 15;
+        reasons.push(`Known trade lane via ${matchedPorts.join(" & ")}.`);
+    }
+    
+    if (product.appetite.modes.includes(shipment.transportMode)) {
+        score += 15;
+        reasons.push("Supports selected transport mode.");
+    }
+    
+    if (shipment.riskProfile === "conservative" && product.coverage.includes("ICC A")) {
+        score += 10;
+        reasons.push("High-coverage clause for conservative posture.");
+    }
+    
+    if (shipment.riskProfile === "aggressive" && product.basePremiumRate < 0.4) {
+        score += 10;
+        reasons.push("Lean rate aligns with cost-focused approach.");
+    }
+    
+    score += Math.min(15, product.rating * 3);
+    score = Math.min(100, score);
+    
+    return {
+        product,
+        score,
+        reasons,
+        estimatedPremium: ((shipment.shipmentValue * product.basePremiumRate) / 100).toFixed(2),
+    };
+}
+
+/**
+ * Classify insurance score
+ */
+function classifyInsuranceScore(score) {
+    if (score >= 80) return "high";
+    if (score >= 60) return "medium";
+    return "low";
+}
+
+/**
+ * Set insurance submit button loading state
+ */
+function setInsuranceSubmitLoading(isLoading) {
+    const submitBtn = document.getElementById('insurance-submit-btn');
+    if (!submitBtn) return;
+    
+    if (isLoading) {
+        submitBtn.classList.add('loading');
+        submitBtn.textContent = 'Scanning markets...';
+    } else {
+        submitBtn.classList.remove('loading');
+        submitBtn.textContent = 'Find best-fit insurance';
+    }
+}
+
+/**
+ * Render insurance results
+ */
+function renderInsuranceResults(recommendations) {
+    const resultsContainer = document.getElementById('insurance-results');
+    if (!resultsContainer) return;
+    
+    if (!recommendations.length) {
+        resultsContainer.classList.add('empty');
+        resultsContainer.innerHTML = '<p>No strong matches yet. Try adjusting commodity or shipment value.</p>';
+        return;
+    }
+    
+    resultsContainer.classList.remove('empty');
+    resultsContainer.innerHTML = recommendations
+        .map(({ product, score, reasons, estimatedPremium }) => {
+            const badges = product.coverage.map(c => `<span class="insurance-tag">${c}</span>`).join('');
+            const reasons_html = reasons.map(r => `<li>${r}</li>`).join('');
+            
+            return `
+                <article class="insurance-result-card">
+                    <header>
+                        <div>
+                            <h3>${product.product}</h3>
+                            <p>${product.provider}</p>
+                        </div>
+                        <span class="insurance-score-badge ${classifyInsuranceScore(score)}">Score ${Math.round(score)}/100</span>
+                    </header>
+                    <div class="insurance-tag-row">
+                        ${badges}
+                        <span class="insurance-tag">Premium ≈ $${estimatedPremium}</span>
+                        <span class="insurance-tag">Rating: ${product.rating}</span>
+                    </div>
+                    <a class="insurance-result-link" href="${product.url}" target="_blank" rel="noopener">
+                        View policy deck ↗
+                    </a>
+                    <ul>
+                        ${reasons_html}
+                    </ul>
+                    <p>${product.notes}</p>
+                </article>
+            `;
+        })
+        .join('');
+}
+
+/**
+ * Handle insurance form submission
+ */
+function handleInsuranceSubmit(event) {
+    event.preventDefault();
+    setInsuranceSubmitLoading(true);
+    
+    const form = document.getElementById('shipment-form');
+    const formData = new FormData(form);
+    
+    const originPortInfo = resolveInsurancePortSelection('insurance-origin-port');
+    const destinationPortInfo = resolveInsurancePortSelection('insurance-destination-port');
+    
+    const shipment = {
+        goodsType: formData.get('goodsType'),
+        shipmentValue: Number(formData.get('shipmentValue')),
+        originCountry: formData.get('originCountry'),
+        originPort: originPortInfo.value,
+        originPortLabel: originPortInfo.label,
+        destinationCountry: formData.get('destinationCountry'),
+        destinationPort: destinationPortInfo.value,
+        destinationPortLabel: destinationPortInfo.label,
+        transportMode: formData.get('transportMode'),
+        riskProfile: formData.get('riskProfile'),
+        notes: formData.get('notes'),
+    };
+    
+    const recommendations = insuranceCatalogue
+        .map((product) => scoreInsuranceProduct(shipment, product))
+        .filter((rec) => rec.score > 30)
+        .sort((a, b) => b.score - a.score)
+        .slice(0, 3);
+    
+    renderInsuranceResults(recommendations);
+    
+    const resultsContainer = document.getElementById('insurance-results');
+    if (resultsContainer) {
+        resultsContainer.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+    
+    setInsuranceSubmitLoading(false);
+}
+
+/**
+ * Export insurance results
+ */
+function exportInsuranceResults() {
+    const resultsContainer = document.getElementById('insurance-results');
+    const cards = resultsContainer ? [...resultsContainer.querySelectorAll('.insurance-result-card')] : [];
+    
+    if (!cards.length) {
+        alert('No results to export. Please generate recommendations first.');
+        return;
+    }
+    
+    const data = cards.map((card) => ({
+        policy: card.querySelector('h3').textContent,
+        provider: card.querySelector('p').textContent,
+        score: card.querySelector('.insurance-score-badge').textContent,
+        url: card.querySelector('.insurance-result-link')?.href ?? '',
+        details: [...card.querySelectorAll('li')].map((li) => li.textContent),
+    }));
+    
+    const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = 'insurance-recommendations.json';
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
+}
+
+/**
+ * Setup insurance event listeners
+ */
+function setupInsuranceEventListeners() {
+    const insuranceForm = document.getElementById('shipment-form');
+    const exportBtn = document.getElementById('insurance-export-btn');
+    
+    if (insuranceForm) {
+        insuranceForm.addEventListener('submit', handleInsuranceSubmit);
+    }
+    
+    if (exportBtn) {
+        exportBtn.addEventListener('click', exportInsuranceResults);
+    }
+}
+
+// Initialize insurance when document loads
+document.addEventListener('DOMContentLoaded', () => {
+    // Small delay to ensure all DOM elements are ready
+    setTimeout(() => {
+        initializeInsuranceModule();
+    }, 100);
+});
+
+// ============================================
+// DOCUMENTS MODULE
+// ============================================
+
+let documentsCache = [];
+let currentDocument = null;
+
+const documentTypeMap = {
+    'iecCertificate': { name: 'IEC Certificate', category: 'iec', icon: '📋' },
+    'gstCertificate': { name: 'GST Certificate', category: 'gst', icon: '📋' },
+    'companyRegistration': { name: 'Company Registration', category: 'company', icon: '🏢' },
+    'ownerIdProof': { name: 'Owner ID Proof', category: 'idproof', icon: '🪪' },
+    'addressProof': { name: 'Address Proof', category: 'addressproof', icon: '📮' },
+    'profilePhoto': { name: 'Profile Photo', category: 'profile', icon: '👤' },
+    'identityProof': { name: 'Identity Proof', category: 'compliance', icon: '🪪' },
+    'businessProof': { name: 'Business Proof', category: 'compliance', icon: '🏢' },
+    'bankProof': { name: 'Bank Proof', category: 'finance', icon: '🏦' },
+    'selfie': { name: 'Verification Selfie', category: 'verification', icon: '🤳' },
+};
+
+/**
+ * Resolve meta info for a document type
+ */
+function getDocumentTypeInfo(docType, fallbackName = '') {
+    return documentTypeMap[docType] || {
+        name: fallbackName || docType,
+        category: 'other',
+        icon: '📄',
+    };
+}
+
+/**
+ * Normalize data URLs/Base64 strings
+ */
+function extractBase64Components(dataInput = '', fallbackMime = '') {
+    if (typeof dataInput !== 'string') {
+        return { base64: '', mimeType: fallbackMime };
+    }
+
+    if (dataInput.startsWith('data:')) {
+        const [meta, base64Payload] = dataInput.split(',');
+        const mimeMatch = meta.match(/data:(.*?);base64/);
+        return {
+            base64: base64Payload || '',
+            mimeType: mimeMatch ? mimeMatch[1] : (fallbackMime || ''),
+        };
+    }
+
+    return { base64: dataInput, mimeType: fallbackMime || '' };
+}
+
+/**
+ * Build a normalized document record for UI consumption
+ */
+function createDocumentRecord({
+    source = 'realtime',
+    docType,
+    rawData,
+    fileName = '',
+    fileType = '',
+    uploadedAt,
+    fallbackName = '',
+    categoryOverride,
+    iconOverride,
+}) {
+    if (!rawData) return null;
+
+    const { base64, mimeType: extractedMime } = extractBase64Components(rawData, fileType);
+    if (!base64) return null;
+
+    const typeInfo = getDocumentTypeInfo(docType, fallbackName);
+    const resolvedMime = fileType || extractedMime || (getMimeType(base64) !== 'unknown' ? getMimeType(base64) : 'application/octet-stream');
+
+    const record = {
+        id: `${source}-${docType}-${uploadedAt || Date.now()}-${Math.random().toString(36).slice(2, 7)}`,
+        type: docType,
+        name: fileName || fallbackName || typeInfo.name,
+        category: categoryOverride || typeInfo.category,
+        icon: iconOverride || typeInfo.icon,
+        data: base64,
+        uploadedAt: uploadedAt || new Date().toISOString(),
+        size: calculateBase64Size(base64),
+        mimeType: resolvedMime,
+        source,
+        fileName: fileName || fallbackName || typeInfo.name,
+    };
+
+    return record;
+}
+
+/**
+ * Normalize timestamps coming from Firestore/Realtime
+ */
+function resolveUploadedAt(...values) {
+    for (const value of values) {
+        if (!value) continue;
+        if (typeof value === 'string') return value;
+        if (value instanceof Date) return value.toISOString();
+        if (typeof value.toDate === 'function') {
+            try {
+                return value.toDate().toISOString();
+            } catch (error) {
+                console.warn('Unable to convert Firestore timestamp:', error);
+            }
+        }
+    }
+    return new Date().toISOString();
+}
+
+/**
+ * Collect documents saved in Realtime Database
+ */
+function collectRealtimeDocuments(userData = {}) {
+    if (!userData.documents) return [];
+
+    const documents = [];
+    Object.keys(userData.documents).forEach((docKey) => {
+        if (docKey.endsWith('FileName') || docKey.endsWith('FileType')) {
+            return;
+        }
+
+        const rawValue = userData.documents[docKey];
+        if (!rawValue) return;
+
+        const normalizedValue = typeof rawValue === 'object' && rawValue.data ? rawValue.data : rawValue;
+        const fileName =
+            (typeof rawValue === 'object' && rawValue.fileName) ||
+            userData.documents[`${docKey}FileName`] ||
+            undefined;
+        const fileType =
+            (typeof rawValue === 'object' && rawValue.fileType) ||
+            userData.documents[`${docKey}FileType`] ||
+            undefined;
+        const uploadedAt = resolveUploadedAt(
+            (typeof rawValue === 'object' && rawValue.uploadedAt) || userData[`${docKey}UpdatedAt`]
+        );
+
+        const record = createDocumentRecord({
+            source: 'realtime',
+            docType: docKey,
+            rawData: normalizedValue,
+            fileName,
+            fileType,
+            uploadedAt,
+        });
+
+        if (record) {
+            record.status = 'Uploaded';
+            documents.push(record);
+        }
+    });
+
+    return documents;
+}
+
+/**
+ * Collect documents stored in Firestore (eKYC payload)
+ */
+function collectFirestoreDocuments(ekycData = {}) {
+    if (!ekycData.documents) return [];
+
+    const documents = [];
+    Object.entries(ekycData.documents).forEach(([docType, docValue]) => {
+        if (!docValue) return;
+
+        const rawData = docValue.dataUrl || docValue.base64 || docValue.data || '';
+        const uploadedAt = resolveUploadedAt(docValue.uploadedAt, ekycData.updatedAt, ekycData.timestamp);
+
+        const record = createDocumentRecord({
+            source: 'firestore',
+            docType,
+            rawData,
+            fileName: docValue.fileName,
+            fileType: docValue.fileType,
+            uploadedAt,
+        });
+
+        if (record) {
+            record.status = (ekycData.ekycStatus || 'Submitted').toUpperCase();
+            documents.push(record);
+        }
+    });
+
+    return documents;
+}
+
+/**
+ * Initialize documents module
+ */
+function initializeDocumentsModule() {
+    const documentSearch = document.getElementById('documentSearch');
+    const documentFilter = document.getElementById('documentFilter');
+    
+    if (documentSearch) {
+        documentSearch.addEventListener('input', debounce(handleDocumentSearch, 300));
+    }
+    
+    if (documentFilter) {
+        documentFilter.addEventListener('change', handleDocumentFilter);
+    }
+}
+
+/**
+ * Debounce utility function
+ */
+function debounce(func, delay) {
+    let timeoutId;
+    return function(...args) {
+        clearTimeout(timeoutId);
+        timeoutId = setTimeout(() => func.apply(this, args), delay);
+    };
+}
+
+/**
+ * Load documents from Firebase
+ */
+async function loadDocumentsFromFirebase() {
+    const user = auth?.currentUser;
+    if (!user || (!database && !firestore)) {
+        console.log('User not authenticated or Firebase services not available');
+        return;
+    }
+
+    const loadingEl = document.getElementById('documentsLoading');
+    const emptyEl = document.getElementById('documentsEmpty');
+    const gridEl = document.getElementById('documentsGrid');
+    
+    if (loadingEl) loadingEl.style.display = 'flex';
+    if (gridEl) gridEl.style.display = 'none';
+    if (emptyEl) emptyEl.style.display = 'none';
+
+    try {
+        const realtimePromise = database ? database.ref(`users/${user.uid}`).once('value') : Promise.resolve(null);
+        const firestorePromise = firestore ? firestore.collection('ekyc').doc(user.uid).get() : Promise.resolve(null);
+        const [snapshot, ekycDoc] = await Promise.all([realtimePromise, firestorePromise]);
+        
+        const userData = snapshot ? snapshot.val() : null;
+        const ekycData = ekycDoc && ekycDoc.exists ? ekycDoc.data() : null;
+
+        const documents = [];
+
+        if (userData) {
+            documents.push(...collectRealtimeDocuments(userData));
+
+            const profilePhotoData = userData.profilePhoto
+                ? (typeof userData.profilePhoto === 'object' ? userData.profilePhoto.data : userData.profilePhoto)
+                : null;
+
+            if (profilePhotoData) {
+                const record = createDocumentRecord({
+                    source: 'realtime',
+                    docType: 'profilePhoto',
+                    rawData: profilePhotoData,
+                    fileName: (typeof userData.profilePhoto === 'object' && userData.profilePhoto.fileName) || 'Profile Photo',
+                    fileType: (typeof userData.profilePhoto === 'object' && userData.profilePhoto.fileType) || '',
+                    uploadedAt: resolveUploadedAt(
+                        userData.profilePhoto?.uploadedAt,
+                        userData.profilePhotoUpdatedAt,
+                        userData.updatedAt
+                    ),
+                });
+
+                if (record) {
+                    record.status = 'Uploaded';
+                    documents.push(record);
+                }
+            }
+        }
+
+        if (ekycData) {
+            documents.push(...collectFirestoreDocuments(ekycData));
+        }
+        
+        documentsCache = documents;
+        
+        if (documents.length === 0) {
+            showEmptyDocuments();
+        } else {
+            renderDocuments(documents);
+            updateDocumentsStats(documents);
+        }
+    } catch (error) {
+        console.error('Error loading documents:', error);
+        documentsCache = [];
+        showEmptyDocuments();
+    } finally {
+        if (loadingEl) loadingEl.style.display = 'none';
+    }
+}
+
+/**
+ * Calculate Base64 size in KB
+ */
+function calculateBase64Size(base64String) {
+    if (!base64String) return 0;
+    const padding = (base64String.match(/=/g) || []).length;
+    const bytes = Math.ceil((base64String.length * 3) / 4) - padding;
+    return (bytes / 1024).toFixed(2);
+}
+
+/**
+ * Get mime type from Base64 data
+ */
+function getMimeType(base64String) {
+    if (!base64String) return 'unknown';
+    
+    if (base64String.startsWith('/9j/') || base64String.startsWith('iVBORw0KGgoAAAA')) {
+        return 'image/jpeg';
+    } else if (base64String.startsWith('iVBORw0KGgo')) {
+        return 'image/png';
+    } else if (base64String.startsWith('JVBERi0')) {
+        return 'application/pdf';
+    }
+    
+    return 'unknown';
+}
+
+/**
+ * Determine file extension from mime type
+ */
+function getFileExtension(mimeType) {
+    const mimeMap = {
+        'image/jpeg': 'jpg',
+        'image/png': 'png',
+        'image/gif': 'gif',
+        'application/pdf': 'pdf',
+    };
+    return mimeMap[mimeType] || 'bin';
+}
+
+/**
+ * Show empty documents state
+ */
+function showEmptyDocuments() {
+    const emptyEl = document.getElementById('documentsEmpty');
+    const gridEl = document.getElementById('documentsGrid');
+    const statsEl = document.getElementById('documentsStats');
+    
+    if (emptyEl) emptyEl.style.display = 'flex';
+    if (gridEl) gridEl.style.display = 'none';
+    if (statsEl) statsEl.style.display = 'none';
+}
+
+/**
+ * Render documents to grid
+ */
+function renderDocuments(documents) {
+    const gridEl = document.getElementById('documentsGrid');
+    const emptyEl = document.getElementById('documentsEmpty');
+    
+    if (!gridEl) return;
+    
+    if (documents.length === 0) {
+        showEmptyDocuments();
+        return;
+    }
+
+    gridEl.style.display = 'grid';
+    if (emptyEl) emptyEl.style.display = 'none';
+
+    gridEl.innerHTML = documents.map((doc) => {
+        const uploadDate = new Date(doc.uploadedAt);
+        const formattedDate = uploadDate.toLocaleDateString();
+        const previewHTML = isImageMimeType(doc.mimeType) && doc.data
+            ? `<img src="data:${doc.mimeType};base64,${doc.data}" alt="${doc.name}">`
+            : `<div class="file-icon">${doc.icon}</div>`;
+
+        return `
+            <div class="document-card" onclick="openDocumentDetail('${doc.id}')">
+                <div class="document-card-preview">
+                    ${previewHTML}
+                    <div class="document-card-overlay">
+                        <button onclick="event.stopPropagation(); openDocumentDetail('${doc.id}')">
+                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
+                                <circle cx="12" cy="12" r="3"></circle>
+                            </svg>
+                            View
+                        </button>
+                        <button onclick="event.stopPropagation(); downloadDocumentDirect('${doc.id}')">
+                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                                <polyline points="7 10 12 15 17 10"></polyline>
+                                <line x1="12" y1="15" x2="12" y2="3"></line>
+                            </svg>
+                            Download
+                        </button>
+                    </div>
+                </div>
+                <div class="document-card-content">
+                    <div class="document-card-title">${doc.name}</div>
+                    <span class="document-card-type">${doc.category}</span>
+                    <div class="document-card-meta">
+                        <div class="document-card-date">
+                            <div>${formattedDate}</div>
+                        </div>
+                        <div class="document-card-size">${doc.size} KB</div>
+                    </div>
+                </div>
+            </div>
+        `;
+    }).join('');
+}
+
+/**
+ * Check if mime type is image
+ */
+function isImageMimeType(mimeType) {
+    return mimeType && mimeType.startsWith('image/');
+}
+
+/**
+ * Update documents statistics
+ */
+function updateDocumentsStats(documents) {
+    const statsEl = document.getElementById('documentsStats');
+    if (!statsEl) return;
+
+    const totalDocs = documents.length;
+    const totalSize = documents.reduce((sum, doc) => sum + parseFloat(doc.size), 0).toFixed(2);
+    const uniqueTypes = new Set(documents.map(doc => doc.category)).size;
+
+    const totalDocsEl = document.getElementById('totalDocuments');
+    const totalSizeEl = document.getElementById('totalSize');
+    const typeCountEl = document.getElementById('typeCount');
+
+    if (totalDocsEl) totalDocsEl.textContent = totalDocs;
+    if (totalSizeEl) totalSizeEl.textContent = `${totalSize} MB`;
+    if (typeCountEl) typeCountEl.textContent = uniqueTypes;
+
+    if (totalDocs > 0) {
+        statsEl.style.display = 'grid';
+    }
+}
+
+/**
+ * Handle document search
+ */
+function handleDocumentSearch(event) {
+    const searchTerm = event.target.value.toLowerCase();
+    const filtered = documentsCache.filter(doc => 
+        doc.name.toLowerCase().includes(searchTerm) ||
+        doc.category.toLowerCase().includes(searchTerm)
+    );
+    renderDocuments(filtered);
+}
+
+/**
+ * Handle document filter
+ */
+function handleDocumentFilter(event) {
+    const filterValue = event.target.value;
+    
+    if (!filterValue) {
+        renderDocuments(documentsCache);
+    } else {
+        const filtered = documentsCache.filter(doc => doc.category === filterValue);
+        renderDocuments(filtered);
+    }
+}
+
+/**
+ * Open document detail modal
+ */
+function openDocumentDetail(docId) {
+    const doc = documentsCache.find(d => d.id === docId);
+    if (!doc) return;
+
+    currentDocument = doc;
+    const modal = document.getElementById('documentDetailModal');
+    
+    if (!modal) return;
+
+    // Update modal content
+    const titleEl = document.getElementById('documentDetailTitle');
+    const typeEl = document.getElementById('documentDetailType');
+    const sizeEl = document.getElementById('documentSize');
+    const dateEl = document.getElementById('documentDate');
+    const fileTypeEl = document.getElementById('documentFileType');
+    const statusEl = document.getElementById('documentStatus');
+    const descriptionEl = document.getElementById('documentDescription');
+    const deleteBtn = document.getElementById('documentDeleteButton');
+    const previewArea = document.getElementById('documentPreviewArea');
+
+    if (titleEl) titleEl.textContent = doc.name;
+    if (typeEl) {
+        typeEl.textContent = doc.category.toUpperCase();
+        typeEl.className = 'document-type-badge';
+    }
+    if (sizeEl) sizeEl.textContent = `${doc.size} KB`;
+    if (dateEl) dateEl.textContent = new Date(doc.uploadedAt).toLocaleDateString();
+    if (fileTypeEl) fileTypeEl.textContent = getFileExtension(doc.mimeType).toUpperCase();
+    if (statusEl) statusEl.textContent = doc.status || 'Uploaded';
+    if (descriptionEl) descriptionEl.textContent = doc.fileName || doc.name;
+
+    if (deleteBtn) {
+        if (doc.source === 'firestore') {
+            deleteBtn.disabled = true;
+            deleteBtn.title = 'Delete is disabled for eKYC submissions';
+        } else {
+            deleteBtn.disabled = false;
+            deleteBtn.title = 'Delete';
+        }
+    }
+
+    // Show preview
+    if (previewArea) {
+        if (isImageMimeType(doc.mimeType)) {
+            previewArea.innerHTML = `<img src="data:${doc.mimeType};base64,${doc.data}" alt="${doc.name}" style="max-width: 100%; max-height: 100%; border-radius: 8px;">`;
+        } else if (doc.mimeType === 'application/pdf') {
+            previewArea.innerHTML = `
+                <div style="text-align: center; padding: 40px;">
+                    <div style="font-size: 4rem; margin-bottom: 20px;">📄</div>
+                    <p style="color: var(--color-text-secondary);">PDF Preview not available</p>
+                    <p style="color: var(--color-text-secondary); font-size: 0.9rem;">Click Download to view the full document</p>
+                </div>
+            `;
+        } else {
+            previewArea.innerHTML = `
+                <div style="text-align: center; padding: 40px;">
+                    <div style="font-size: 4rem; margin-bottom: 20px;">📎</div>
+                    <p style="color: var(--color-text-secondary);">Preview not available</p>
+                </div>
+            `;
+        }
+    }
+
+    // Open modal
+    modal.classList.add('active');
+    modal.setAttribute('aria-hidden', 'false');
+    document.body.style.overflow = 'hidden';
+}
+
+/**
+ * Close document detail modal
+ */
+function closeDocumentDetail() {
+    const modal = document.getElementById('documentDetailModal');
+    if (!modal) return;
+
+    modal.classList.remove('active');
+    modal.setAttribute('aria-hidden', 'true');
+    document.body.style.overflow = '';
+    currentDocument = null;
+}
+
+/**
+ * Download document
+ */
+function downloadDocument() {
+    if (!currentDocument) return;
+    downloadDocumentFile(currentDocument);
+    closeDocumentDetail();
+}
+
+/**
+ * Download document directly from card
+ */
+function downloadDocumentDirect(docId) {
+    const doc = documentsCache.find(d => d.id === docId);
+    if (doc) {
+        downloadDocumentFile(doc);
+    }
+}
+
+/**
+ * Download document file
+ */
+function downloadDocumentFile(doc) {
+    try {
+        const binaryString = atob(doc.data);
+        const bytes = new Uint8Array(binaryString.length);
+        
+        for (let i = 0; i < binaryString.length; i++) {
+            bytes[i] = binaryString.charCodeAt(i);
+        }
+        
+        const blob = new Blob([bytes], { type: doc.mimeType });
+        const url = URL.createObjectURL(blob);
+        const link = document.createElement('a');
+        
+        const ext = getFileExtension(doc.mimeType);
+        const baseName = (doc.fileName || doc.name || 'document').replace(/\.[^/.]+$/, '');
+        const fileName = `${baseName.replace(/\s+/g, '_')}.${ext}`;
+        
+        link.href = url;
+        link.download = fileName;
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        URL.revokeObjectURL(url);
+    } catch (error) {
+        console.error('Error downloading document:', error);
+        alert('Error downloading document. Please try again.');
+    }
+}
+
+/**
+ * Delete document
+ */
+async function deleteDocument() {
+    if (!currentDocument) return;
+
+    if (currentDocument.source !== 'realtime') {
+        alert('Only documents uploaded via your profile can be deleted here.');
+        return;
+    }
+
+    if (!confirm(`Are you sure you want to delete "${currentDocument.name}"?`)) {
+        return;
+    }
+
+    const user = auth?.currentUser;
+    if (!user || !database) return;
+
+    try {
+        const docType = currentDocument.type;
+        await database.ref(`users/${user.uid}/documents/${docType}`).remove();
+        
+        documentsCache = documentsCache.filter(d => d.id !== currentDocument.id);
+        
+        closeDocumentDetail();
+        loadDocumentsFromFirebase();
+    } catch (error) {
+        console.error('Error deleting document:', error);
+        alert('Error deleting document. Please try again.');
+    }
+}
+
+// Close modal on Escape key
+document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape') {
+        const documentModal = document.getElementById('documentDetailModal');
+        if (documentModal && documentModal.classList.contains('active')) {
+            closeDocumentDetail();
+        }
+    }
+});
+
+// Initialize documents module when insurance tab is opened
+document.addEventListener('DOMContentLoaded', () => {
+    setTimeout(() => {
+        initializeDocumentsModule();
+        
+        // Load documents when insurance section is shown
+        const originalSwitchTab = window.switchTab;
+        window.switchTab = function(tabName) {
+            originalSwitchTab(tabName);
+            
+            if (tabName === 'documents') {
+                loadDocumentsFromFirebase();
+            }
+        };
+    }, 100);
+});
+
