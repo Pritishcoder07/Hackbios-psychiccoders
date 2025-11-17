@@ -7,6 +7,54 @@
     background: var(--color-bg-secondary);
 }
 
+/* Auth Status Banner */
+.auth-status-banner {
+    background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
+    color: white;
+    padding: var(--spacing-md) var(--spacing-lg);
+    border-bottom: 2px solid #1e40af;
+    box-shadow: var(--shadow-md);
+    position: sticky;
+    top: 0;
+    z-index: 999;
+}
+
+.auth-status-banner.success {
+    background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+    border-bottom-color: #047857;
+}
+
+.auth-status-banner.error {
+    background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+    border-bottom-color: #991b1b;
+}
+
+.status-content {
+    max-width: 1400px;
+    margin: 0 auto;
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-md);
+    font-weight: 500;
+    font-size: var(--font-size-sm);
+}
+
+.status-content svg {
+    flex-shrink: 0;
+    animation: spin 2s linear infinite;
+}
+
+.auth-status-banner.success svg,
+.auth-status-banner.error svg {
+    animation: none;
+}
+
+@keyframes spin {
+    to {
+        transform: rotate(360deg);
+    }
+}
+
 .admin-header {
     background: var(--color-bg-primary);
     border-bottom: 1px solid var(--color-border);

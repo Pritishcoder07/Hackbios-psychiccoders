@@ -36,30 +36,11 @@ try {
     console.error('Firebase initialization error:', error);
 }
 
-// ============================================
-// AUTHENTICATION
-// ============================================
-
-auth?.onAuthStateChanged((user) => {
-    if (user) {
-        loadAdminData(user);
-        initializeAdminPanel();
-    } else {
-        // Redirect to login (reuse main login page)
-        window.location.href = '../index.html';
-    }
-});
-
-function loadAdminData(user) {
-    const adminName = document.getElementById('adminName');
-    if (adminName) {
-        adminName.textContent = user.displayName || user.email || 'Admin';
-    }
-}
-
-// ============================================
-// ADMIN PANEL INITIALIZATION
-// ============================================
+const ADMIN_DEFAULT = {
+    name: 'Admin',
+    id: 'manual-admin',
+    email: 'admin@local'
+};
 
 let videoCallRequestsListener = null;
 let activeRequestId = null;
@@ -67,6 +48,74 @@ let activeUserId = null;
 let adminLocalStream = null;
 let adminPeerConnection = null;
 let ekycData = null;
+let isAdminAuthenticated = false;
+
+// Initialize admin panel without requiring authentication
+function initializeAdminAuthless() {
+    const adminIdentity = {
+        displayName: ADMIN_DEFAULT.name,
+        email: ADMIN_DEFAULT.email
+    };
+    loadAdminData(adminIdentity);
+    initializeAdminPanel();
+    isAdminAuthenticated = true;
+}
+
+// Try to authenticate admin
+function authenticateAdmin() {
+    // First, try anonymous sign-in if enabled
+    if (auth?.signInAnonymously) {
+        auth.signInAnonymously()
+            .then((credential) => {
+                const user = credential?.user;
+                const adminIdentity = {
+                    displayName: ADMIN_DEFAULT.name,
+                    email: user?.email || ADMIN_DEFAULT.email
+                };
+                loadAdminData(adminIdentity);
+                initializeAdminPanel();
+                isAdminAuthenticated = true;
+                console.log('Admin authenticated successfully via anonymous sign-in');
+            })
+            .catch((error) => {
+                console.warn('Anonymous sign-in failed:', error.code, error.message);
+                console.log('Falling back to local admin authentication...');
+                // If anonymous sign-in fails, use local authentication
+                initializeAdminAuthless();
+            });
+    } else {
+        // Anonymous auth not available, use local auth
+        initializeAdminAuthless();
+    }
+}
+
+// Check auth state on load
+if (auth) {
+    auth.onAuthStateChanged((user) => {
+        if (user) {
+            console.log('User authenticated:', user.uid);
+            isAdminAuthenticated = true;
+            initializeAdminPanel();
+        } else {
+            // Not authenticated, try to authenticate
+            authenticateAdmin();
+        }
+    });
+} else {
+    // Firebase not initialized, use local auth
+    console.warn('Firebase Auth not available, using local admin authentication');
+    initializeAdminAuthless();
+}
+
+function loadAdminData(user) {
+    const adminName = document.getElementById('adminName');
+    if (adminName) {
+        adminName.textContent = user.displayName || user.email || 'Admin';
+    }
+    
+    // Update auth status banner
+    updateAuthStatus(true, 'Connected to admin services');
+}
 
 const rtcConfiguration = {
     iceServers: [
@@ -74,6 +123,28 @@ const rtcConfiguration = {
         { urls: 'stun:stun1.l.google.com:19302' }
     ]
 };
+
+/**
+ * Update auth status banner
+ */
+function updateAuthStatus(isConnected, message) {
+    const statusBanner = document.getElementById('authStatus');
+    const statusText = document.getElementById('authStatusText');
+    
+    if (!statusBanner) return;
+    
+    if (isConnected) {
+        statusBanner.className = 'auth-status-banner success';
+        statusText.textContent = message;
+        setTimeout(() => {
+            statusBanner.style.display = 'none';
+        }, 3000);
+    } else {
+        statusBanner.className = 'auth-status-banner error';
+        statusText.textContent = message;
+        statusBanner.style.display = 'block';
+    }
+}
 
 function initializeAdminPanel() {
     listenForVideoCallRequests();
@@ -152,8 +223,7 @@ function getTimeAgo(timestamp) {
  * Accept video call request
  */
 async function acceptVideoCall(requestId, userId) {
-    const user = auth?.currentUser;
-    if (!user || !firestore) return;
+    if (!firestore) return;
     
     activeRequestId = requestId;
     activeUserId = userId;
@@ -161,8 +231,8 @@ async function acceptVideoCall(requestId, userId) {
     try {
         await firestore.collection('videoCallRequests').doc(requestId).update({
             status: 'accepted',
-            agentId: user.uid,
-            agentEmail: user.email,
+            agentId: ADMIN_DEFAULT.id,
+            agentEmail: ADMIN_DEFAULT.email,
             acceptedAt: new Date().toISOString()
         });
         
@@ -307,8 +377,15 @@ async function startAdminVideoCall(requestId) {
         
         adminPeerConnection.onicecandidate = (event) => {
             if (event.candidate) {
+                // Convert RTCIceCandidate to plain JSON (Firestore can't store complex objects)
+                const candidateData = {
+                    candidate: event.candidate.candidate,
+                    sdpMLineIndex: event.candidate.sdpMLineIndex,
+                    sdpMid: event.candidate.sdpMid,
+                    usernameFragment: event.candidate.usernameFragment
+                };
                 firestore.collection('videoCallRequests').doc(requestId).update({
-                    agentIceCandidate: event.candidate,
+                    agentIceCandidate: candidateData,
                     updatedAt: new Date().toISOString()
                 });
             }
@@ -323,6 +400,7 @@ async function startAdminVideoCall(requestId) {
 /**
  * Listen for offer from user
  */
+let adminOfferProcessed = false;  // Flag to prevent duplicate offer processing
 function listenForUserOffer(requestId) {
     if (!firestore) return;
     
@@ -332,22 +410,34 @@ function listenForUserOffer(requestId) {
             
             const data = doc.data();
             
-            if (data.offer && adminPeerConnection && adminPeerConnection.signalingState === 'stable') {
-                await adminPeerConnection.setRemoteDescription(new RTCSessionDescription(data.offer));
-                
-                const answer = await adminPeerConnection.createAnswer();
-                await adminPeerConnection.setLocalDescription(answer);
-                
-                await firestore.collection('videoCallRequests').doc(requestId).update({
-                    answer: answer,
-                    status: 'connected',
-                    updatedAt: new Date().toISOString()
-                });
+            // Process offer only once and only when in stable state
+            if (data.offer && !adminOfferProcessed && adminPeerConnection && adminPeerConnection.signalingState === 'stable') {
+                try {
+                    console.log('Processing offer from user, current state:', adminPeerConnection.signalingState);
+                    adminOfferProcessed = true;  // Mark as processed
+                    
+                    await adminPeerConnection.setRemoteDescription(new RTCSessionDescription(data.offer));
+                    console.log('Remote description set, state:', adminPeerConnection.signalingState);
+                    
+                    const answer = await adminPeerConnection.createAnswer();
+                    await adminPeerConnection.setLocalDescription(answer);
+                    console.log('Answer created and set, state:', adminPeerConnection.signalingState);
+                    
+                    await firestore.collection('videoCallRequests').doc(requestId).update({
+                        answer: answer,
+                        status: 'connected',
+                        updatedAt: new Date().toISOString()
+                    });
+                } catch (error) {
+                    console.error('Error processing offer:', error);
+                    adminOfferProcessed = false;  // Reset flag on error so it can retry
+                }
             }
             
-            if (data.iceCandidate && adminPeerConnection) {
+            if (data.agentIceCandidate && adminPeerConnection) {
                 try {
-                    await adminPeerConnection.addIceCandidate(new RTCIceCandidate(data.iceCandidate));
+                    console.log('Adding ICE candidate from user');
+                    await adminPeerConnection.addIceCandidate(new RTCIceCandidate(data.agentIceCandidate));
                 } catch (error) {
                     console.error('Error adding ICE candidate:', error);
                 }
@@ -403,6 +493,9 @@ async function endAdminCall() {
         adminPeerConnection = null;
     }
     
+    // Reset flags
+    adminOfferProcessed = false;
+    
     if (activeRequestId && firestore) {
         try {
             await firestore.collection('videoCallRequests').doc(activeRequestId).update({
@@ -432,14 +525,16 @@ async function approveEKYC() {
     }
     
     try {
+        console.log('Approving eKYC for user:', activeUserId);
         await firestore.collection('ekyc').doc(activeUserId).update({
             ekycStatus: 'verified',
             verifiedAt: new Date().toISOString(),
-            verifiedBy: auth.currentUser.uid,
-            verifiedByEmail: auth.currentUser.email
+            verifiedBy: ADMIN_DEFAULT.id,
+            verifiedByEmail: ADMIN_DEFAULT.email
         });
         
         if (activeRequestId) {
+            console.log('Updating video call request:', activeRequestId);
             await firestore.collection('videoCallRequests').doc(activeRequestId).update({
                 status: 'completed',
                 ekycStatus: 'verified',
@@ -447,6 +542,7 @@ async function approveEKYC() {
             });
         }
         
+        console.log('✓ eKYC approved successfully');
         alert('eKYC approved successfully!');
         endAdminCall();
         
@@ -473,8 +569,8 @@ async function rejectEKYC() {
         await firestore.collection('ekyc').doc(activeUserId).update({
             ekycStatus: 'rejected',
             rejectedAt: new Date().toISOString(),
-            rejectedBy: auth.currentUser.uid,
-            rejectedByEmail: auth.currentUser.email,
+            rejectedBy: ADMIN_DEFAULT.id,
+            rejectedByEmail: ADMIN_DEFAULT.email,
             rejectionReason: reason
         });
         
@@ -482,6 +578,7 @@ async function rejectEKYC() {
             await firestore.collection('videoCallRequests').doc(activeRequestId).update({
                 status: 'completed',
                 ekycStatus: 'rejected',
+                rejectionReason: reason,
                 completedAt: new Date().toISOString()
             });
         }
@@ -496,25 +593,15 @@ async function rejectEKYC() {
 }
 
 /**
- * Handle admin logout
+ * Refresh admin panel (no login required)
  */
-async function handleAdminLogout() {
-    if (confirm('Are you sure you want to logout?')) {
-        try {
-            if (adminLocalStream || adminPeerConnection) {
-                await endAdminCall();
-            }
-            
-            if (videoCallRequestsListener) {
-                videoCallRequestsListener();
-            }
-            
-            await auth?.signOut();
-            window.location.href = '../index.html';
-        } catch (error) {
-            console.error('Error signing out:', error);
-            alert('Failed to logout. Please try again.');
-        }
+function refreshAdminPanel() {
+    if (adminLocalStream || adminPeerConnection) {
+        endAdminCall();
     }
+    if (videoCallRequestsListener) {
+        videoCallRequestsListener();
+    }
+    window.location.reload();
 }
 

@@ -61,6 +61,9 @@ auth?.onAuthStateChanged((user) => {
         // User is signed in
         loadUserData(user);
         updateProfileDisplay(user);
+        // Set up real-time listeners after auth is confirmed
+        checkEKYCStatus();
+        listenForEKYCStatusChanges();
     } else {
         // User is not signed in, redirect to login
         window.location.href = '../index.html';
@@ -76,7 +79,6 @@ document.addEventListener('DOMContentLoaded', () => {
     initializeSidebar();
     initializeNavigation();
     loadUserProfileData();
-    checkEKYCStatus();
 });
 
 /**
@@ -1038,57 +1040,101 @@ let ekycData = null;
 let selfieDataUrl = null;
 
 /**
+ * Safe handler for eKYC button click - with fallback
+ */
+function handleEKYCButtonClick() {
+    console.log('eKYC button clicked');
+    try {
+        // Try async open
+        openEKYCModal().catch(error => {
+            console.error('Async open failed, trying fallback:', error);
+            forceOpenEKYCModal();
+        });
+    } catch (error) {
+        console.error('Error in button handler:', error);
+        forceOpenEKYCModal();
+    }
+}
+
+/**
  * Check eKYC status and show/hide button accordingly
  */
 async function checkEKYCStatus() {
     const user = auth?.currentUser;
-    if (!user || !firestore) return;
+    if (!user || !firestore) {
+        console.log('No user or firestore available for eKYC check');
+        return;
+    }
 
     try {
         const ekycDoc = await firestore.collection('ekyc').doc(user.uid).get();
+        console.log('eKYC Document check - exists:', ekycDoc.exists);
         
-        if (ekycDoc.exists) {
-            ekycData = ekycDoc.data();
+        const ekycCard = document.getElementById('ekycCard');
+        const ekycStatusCard = document.getElementById('ekycStatusCard');
+        const videoCallRequestCard = document.getElementById('videoCallRequestCard');
+        
+        // NO eKYC DATA - Show Complete eKYC button
+        if (!ekycDoc.exists) {
+            console.log('✓ No eKYC data - showing Complete eKYC button');
+            if (ekycCard) ekycCard.style.display = 'block';
+            if (ekycStatusCard) ekycStatusCard.style.display = 'none';
+            if (videoCallRequestCard) videoCallRequestCard.style.display = 'none';
+            return;
+        }
+        
+        ekycData = ekycDoc.data();
+        console.log('eKYC Data:', {
+            ekycCompleted: ekycData.ekycCompleted,
+            ekycStatus: ekycData.ekycStatus
+        });
+        
+        // eKYC NOT COMPLETED - Show Complete eKYC button
+        if (ekycData.ekycCompleted !== true) {
+            console.log('✓ eKYC not completed - showing Complete eKYC button');
+            if (ekycCard) ekycCard.style.display = 'block';
+            if (ekycStatusCard) ekycStatusCard.style.display = 'none';
+            if (videoCallRequestCard) videoCallRequestCard.style.display = 'none';
+            return;
+        }
+        
+        // eKYC COMPLETED - Show status card
+        console.log('✓ eKYC completed - showing status card');
+        if (ekycCard) ekycCard.style.display = 'none';
+        if (ekycStatusCard) ekycStatusCard.style.display = 'block';
+        
+        const statusIcon = document.getElementById('ekycStatusIcon');
+        const statusTitle = document.getElementById('ekycStatusTitle');
+        const statusMessage = document.getElementById('ekycStatusMessage');
+        
+        if (statusIcon && statusTitle && statusMessage) {
+            const status = ekycData.ekycStatus || 'pending';
+            console.log('eKYC Status:', status);
             
-            if (ekycData.ekycCompleted === true) {
-                // Hide eKYC button and show status
-                const ekycCard = document.getElementById('ekycCard');
-                const ekycStatusCard = document.getElementById('ekycStatusCard');
-                const videoCallRequestCard = document.getElementById('videoCallRequestCard');
-                
-                if (ekycCard) ekycCard.style.display = 'none';
-                if (ekycStatusCard) {
-                    ekycStatusCard.style.display = 'block';
-                    
-                    const statusIcon = document.getElementById('ekycStatusIcon');
-                    const statusTitle = document.getElementById('ekycStatusTitle');
-                    const statusMessage = document.getElementById('ekycStatusMessage');
-                    
-                    if (statusIcon && statusTitle && statusMessage) {
-                        const status = ekycData.ekycStatus || 'pending';
-                        
-                        if (status === 'verified') {
-                            statusIcon.textContent = '✓';
-                            statusIcon.style.color = '#10b981';
-                            statusTitle.textContent = 'eKYC Verified';
-                            statusMessage.textContent = 'Your eKYC has been verified successfully.';
-                            if (videoCallRequestCard) videoCallRequestCard.style.display = 'none';
-                        } else if (status === 'rejected') {
-                            statusIcon.textContent = '✗';
-                            statusIcon.style.color = '#ef4444';
-                            statusTitle.textContent = 'eKYC Rejected';
-                            statusMessage.textContent = 'Your eKYC verification was rejected. Please contact support.';
-                            if (videoCallRequestCard) videoCallRequestCard.style.display = 'none';
-                        } else {
-                            // Pending status - show video call request option
-                            statusIcon.textContent = '⏳';
-                            statusIcon.style.color = '#f59e0b';
-                            statusTitle.textContent = 'eKYC Under Review';
-                            statusMessage.textContent = 'Your eKYC is under verification. Request a video call to complete verification.';
-                            if (videoCallRequestCard) videoCallRequestCard.style.display = 'block';
-                        }
-                    }
-                }
+            if (status === 'verified' || status === 'approved') {
+                // eKYC COMPLETED ✓
+                console.log('✓✓✓ eKYC VERIFIED - Show "eKYC Completed"');
+                statusIcon.textContent = '✓';
+                statusIcon.style.color = '#10b981';
+                statusTitle.textContent = 'eKYC Completed';
+                statusMessage.textContent = 'Your eKYC has been verified successfully. You can now access all features.';
+                if (videoCallRequestCard) videoCallRequestCard.style.display = 'none';
+            } else if (status === 'rejected') {
+                // eKYC REJECTED ✗
+                console.log('✗✗✗ eKYC REJECTED');
+                statusIcon.textContent = '✗';
+                statusIcon.style.color = '#ef4444';
+                statusTitle.textContent = 'eKYC Rejected';
+                statusMessage.textContent = 'Your eKYC verification was rejected. Reason: ' + (ekycData.rejectionReason || 'Not provided') + '. Please contact support to resubmit.';
+                if (videoCallRequestCard) videoCallRequestCard.style.display = 'none';
+            } else {
+                // eKYC PENDING ⏳
+                console.log('⏳⏳⏳ eKYC PENDING - Show video call button');
+                statusIcon.textContent = '📹';
+                statusIcon.style.color = '#3b82f6';
+                statusTitle.textContent = 'eKYC Submitted - Awaiting Verification';
+                statusMessage.textContent = 'Your documents have been received. Complete your verification with a video call to finish the process.';
+                if (videoCallRequestCard) videoCallRequestCard.style.display = 'block';
             }
         }
     } catch (error) {
@@ -1097,17 +1143,59 @@ async function checkEKYCStatus() {
 }
 
 /**
+ * Listen for real-time eKYC status changes
+ */
+function listenForEKYCStatusChanges() {
+    const user = auth?.currentUser;
+    if (!user || !firestore) {
+        console.log('No user or firestore for listener');
+        return;
+    }
+
+    console.log('Setting up real-time eKYC listener for user:', user.uid);
+    
+    try {
+        firestore.collection('ekyc').doc(user.uid).onSnapshot(
+            (doc) => {
+                if (doc.exists) {
+                    ekycData = doc.data();
+                    console.log('📡 Real-time eKYC update received:', ekycData.ekycStatus);
+                    checkEKYCStatus();
+                } else {
+                    console.log('📡 eKYC document deleted or not found');
+                    ekycData = null;
+                    checkEKYCStatus();
+                }
+            },
+            (error) => {
+                console.error('Error in eKYC listener:', error);
+            }
+        );
+    } catch (error) {
+        console.error('Error setting up eKYC listener:', error);
+    }
+}
+
+/**
  * Open eKYC modal
  */
 async function openEKYCModal() {
     const modal = document.getElementById('ekycModal');
-    if (!modal) return;
+    if (!modal) {
+        console.error('eKYC modal element not found');
+        return;
+    }
+    
+    console.log('Opening eKYC modal...');
     
     const user = auth?.currentUser;
     if (!user) {
-        showEKYCMessage('Please login to complete eKYC', 'error');
+        console.warn('User not authenticated');
+        showProfileMessage('Please login to complete eKYC', 'error');
         return;
     }
+    
+    console.log('User authenticated:', user.uid);
     
     // Fetch user country from Realtime Database
     try {
@@ -1116,51 +1204,66 @@ async function openEKYCModal() {
             const snapshot = await userRef.once('value');
             if (snapshot.exists()) {
                 const userData = snapshot.val();
-                userCountry = userData.country || 'India'; // Default to India
+                userCountry = userData.country || 'India';
+                console.log('User country:', userCountry);
             } else {
-                userCountry = 'India'; // Default to India
+                userCountry = 'India';
             }
         } else {
-            userCountry = 'India'; // Default to India
+            userCountry = 'India';
+            console.warn('Database not initialized, defaulting to India');
         }
     } catch (error) {
         console.error('Error fetching user country:', error);
-        userCountry = 'India'; // Default to India
+        userCountry = 'India';
     }
     
-    // Check if eKYC already exists
+    // Check if eKYC already exists - only check, don't close
     try {
         if (firestore) {
             const ekycDoc = await firestore.collection('ekyc').doc(user.uid).get();
             if (ekycDoc.exists) {
                 ekycData = ekycDoc.data();
+                console.log('Existing eKYC found:', ekycData);
                 if (ekycData.ekycCompleted === true) {
-                    showEKYCMessage('You have already completed your eKYC. No further action is needed.', 'info');
-                    closeEKYCModal();
-                    return;
+                    console.log('eKYC already completed');
+                    showProfileMessage('You have already completed your eKYC.', 'info');
+                    return; // Don't open modal
                 }
             } else {
-                ekycData = null; // Reset if no existing data
+                ekycData = null;
+                console.log('No existing eKYC data');
             }
         } else {
             ekycData = null;
+            console.warn('Firestore not initialized');
         }
     } catch (error) {
         console.error('Error checking existing eKYC:', error);
         ekycData = null;
     }
     
+    console.log('Populating eKYC form...');
     // Populate dropdowns based on country
     populateEKYCForm();
     
-    // Pre-fill existing data if available and completed
-    if (ekycData && ekycData.ekycCompleted === true) {
+    // Pre-fill existing data if available but not completed
+    if (ekycData && ekycData.ekycCompleted !== true) {
+        console.log('Pre-filling existing eKYC form data...');
         prefillEKYCForm();
     }
     
+    console.log('Displaying eKYC modal');
     modal.classList.add('active');
     modal.setAttribute('aria-hidden', 'false');
     document.body.style.overflow = 'hidden';
+    
+    // Verify modal is actually visible
+    if (modal.classList.contains('active')) {
+        console.log('✓ eKYC modal is now open');
+    } else {
+        console.error('✗ Failed to open eKYC modal');
+    }
 }
 
 /**
@@ -1212,6 +1315,36 @@ function closeEKYCModal() {
         submitBtn.disabled = false;
         submitBtn.textContent = 'Submit eKYC';
     }
+    
+    console.log('eKYC modal closed');
+}
+
+/**
+ * Force open eKYC modal (fallback if async fails)
+ */
+function forceOpenEKYCModal() {
+    console.log('Force opening eKYC modal...');
+    const modal = document.getElementById('ekycModal');
+    if (!modal) {
+        console.error('Cannot find eKYC modal element!');
+        alert('Modal element not found. Please refresh the page.');
+        return;
+    }
+    
+    // Set default country if not set
+    if (!userCountry) {
+        userCountry = 'India';
+    }
+    
+    // Populate form immediately
+    populateEKYCForm();
+    
+    // Open modal
+    modal.classList.add('active');
+    modal.setAttribute('aria-hidden', 'false');
+    document.body.style.overflow = 'hidden';
+    
+    console.log('✓ eKYC modal forced open');
 }
 
 /**
@@ -1674,9 +1807,23 @@ const rtcConfiguration = {
 async function requestVideoCall() {
     const user = auth?.currentUser;
     if (!user || !firestore) {
-        showEKYCMessage('Please login to request video call', 'error');
+        showProfileMessage('Please login to request video call', 'error');
         return;
     }
+    
+    // Check if eKYC is submitted
+    if (!ekycData || ekycData.ekycCompleted !== true) {
+        showProfileMessage('Please complete eKYC submission first', 'error');
+        return;
+    }
+    
+    // Check if already verified
+    if (ekycData.ekycStatus === 'verified') {
+        showProfileMessage('Your eKYC is already verified!', 'info');
+        return;
+    }
+    
+    console.log('Requesting video call for user:', user.uid);
     
     // Open video call modal
     const modal = document.getElementById('videoCallModal');
@@ -1696,8 +1843,10 @@ async function requestVideoCall() {
         const requestData = {
             userId: user.uid,
             userEmail: user.email,
-            userName: user.displayName || user.email,
+            userName: user.displayName || user.email.split('@')[0],
+            ekycId: user.uid,
             status: 'pending',
+            ekycStatus: 'pending_verification',
             timestamp: firebase.firestore.FieldValue.serverTimestamp(),
             createdAt: new Date().toISOString()
         };
@@ -1705,43 +1854,64 @@ async function requestVideoCall() {
         const requestRef = await firestore.collection('videoCallRequests').add(requestData);
         videoCallRequestId = requestRef.id;
         
+        console.log('Video call request created:', videoCallRequestId);
+        showProfileMessage('Request sent to admin. Waiting for response...', 'info');
+        
         // Listen for agent acceptance
         listenForAgentAcceptance(requestRef.id);
         
     } catch (error) {
         console.error('Error requesting video call:', error);
-        showEKYCMessage('Failed to request video call. Please try again.', 'error');
+        showProfileMessage('Failed to request video call. Please try again.', 'error');
         closeVideoCallModal();
     }
 }
 
 /**
- * Listen for agent acceptance of video call
+ * Listen for agent acceptance and verification completion
  */
 function listenForAgentAcceptance(requestId) {
     if (!firestore) return;
+    
+    console.log('Listening for agent response on request:', requestId);
     
     videoCallListener = firestore.collection('videoCallRequests').doc(requestId)
         .onSnapshot((doc) => {
             if (!doc.exists) return;
             
             const data = doc.data();
+            console.log('Video call request status update:', data.status);
             
             if (data.status === 'accepted' && data.agentId) {
                 // Agent accepted, start video call
+                console.log('Agent accepted request');
+                showProfileMessage('Agent connected! Starting video call...', 'success');
                 startVideoCall(data.agentId, requestId);
             } else if (data.status === 'rejected') {
-                showEKYCMessage('Video call request was rejected. Please try again later.', 'error');
+                // Agent rejected
+                console.log('Agent rejected request');
                 closeVideoCallModal();
+                showProfileMessage('Your verification request was rejected. Please try again later.', 'error');
             } else if (data.status === 'completed') {
-                // Call completed
-                endVideoCall();
-                document.getElementById('waitingForAgent').style.display = 'none';
-                document.getElementById('videoCallInterface').style.display = 'none';
-                document.getElementById('callEnded').style.display = 'block';
-                
-                // Check eKYC status
-                checkEKYCStatus();
+                // Verification completed by admin
+                console.log('Video call completed');
+                if (data.ekycStatus === 'verified') {
+                    console.log('eKYC verified by admin');
+                    showProfileMessage('Your eKYC has been verified! Closing video call...', 'success');
+                    setTimeout(() => {
+                        closeVideoCallModal();
+                        // Refresh eKYC status to show verified state
+                        checkEKYCStatus();
+                    }, 2000);
+                } else if (data.ekycStatus === 'rejected') {
+                    console.log('eKYC rejected by admin');
+                    closeVideoCallModal();
+                    showProfileMessage('Your eKYC was rejected. Reason: ' + (data.rejectionReason || 'Not provided'), 'error');
+                    // Refresh status
+                    setTimeout(() => {
+                        checkEKYCStatus();
+                    }, 1000);
+                }
             }
         }, (error) => {
             console.error('Error listening for agent acceptance:', error);
@@ -1784,8 +1954,15 @@ async function startVideoCall(agentId, requestId) {
         // Handle ICE candidates
         peerConnection.onicecandidate = (event) => {
             if (event.candidate) {
+                // Convert RTCIceCandidate to plain JSON (Firestore can't store complex objects)
+                const candidateData = {
+                    candidate: event.candidate.candidate,
+                    sdpMLineIndex: event.candidate.sdpMLineIndex,
+                    sdpMid: event.candidate.sdpMid,
+                    usernameFragment: event.candidate.usernameFragment
+                };
                 firestore.collection('videoCallRequests').doc(requestId).update({
-                    iceCandidate: event.candidate,
+                    iceCandidate: candidateData,
                     updatedAt: new Date().toISOString()
                 });
             }
@@ -1819,21 +1996,37 @@ async function startVideoCall(agentId, requestId) {
 /**
  * Listen for answer from agent
  */
+let answerProcessed = false;  // Flag to prevent duplicate answer processing
 function listenForAgentAnswer(requestId) {
     if (!firestore) return;
     
     const answerListener = firestore.collection('videoCallRequests').doc(requestId)
-        .onSnapshot((doc) => {
+        .onSnapshot(async (doc) => {
             if (!doc.exists) return;
             
             const data = doc.data();
             
-            if (data.answer && peerConnection && peerConnection.signalingState !== 'stable') {
-                peerConnection.setRemoteDescription(new RTCSessionDescription(data.answer));
+            // Process answer only once and only when NOT in stable state (have-local-offer)
+            if (data.answer && !answerProcessed && peerConnection && peerConnection.signalingState === 'have-local-offer') {
+                try {
+                    console.log('Processing answer from agent, current state:', peerConnection.signalingState);
+                    answerProcessed = true;  // Mark as processed
+                    
+                    await peerConnection.setRemoteDescription(new RTCSessionDescription(data.answer));
+                    console.log('Answer remote description set, state:', peerConnection.signalingState);
+                } catch (error) {
+                    console.error('Error setting remote description:', error);
+                    answerProcessed = false;  // Reset flag on error
+                }
             }
             
-            if (data.iceCandidate && peerConnection) {
-                peerConnection.addIceCandidate(new RTCIceCandidate(data.iceCandidate));
+            if (data.agentIceCandidate && peerConnection) {
+                try {
+                    console.log('Adding ICE candidate from agent');
+                    await peerConnection.addIceCandidate(new RTCIceCandidate(data.agentIceCandidate));
+                } catch (error) {
+                    console.error('Error adding ICE candidate:', error);
+                }
             }
         });
 }
@@ -1887,6 +2080,9 @@ async function endVideoCall() {
         peerConnection.close();
         peerConnection = null;
     }
+    
+    // Reset flags
+    answerProcessed = false;
     
     // Update request status
     if (videoCallRequestId && firestore) {

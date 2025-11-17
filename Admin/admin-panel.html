@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Admin Panel - eKYC Verification</title>
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect fill='%23667eea' width='100' height='100'/><text x='50' y='65' font-size='60' font-weight='bold' fill='white' text-anchor='middle'>A</text></svg>">
     <link rel="stylesheet" href="../styles.css">
     <link rel="stylesheet" href="admin-styles.css">
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -17,12 +18,24 @@
 </head>
 <body>
     <div class="admin-container">
+        <!-- Auth Status Banner -->
+        <div id="authStatus" class="auth-status-banner" style="display: none;">
+            <div class="status-content">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <circle cx="12" cy="12" r="10"></circle>
+                    <line x1="12" y1="16" x2="12" y2="12"></line>
+                    <line x1="12" y1="8" x2="12.01" y2="8"></line>
+                </svg>
+                <span id="authStatusText">Connecting to admin services...</span>
+            </div>
+        </div>
+
         <!-- Header -->
         <header class="admin-header">
             <h1>Admin Panel - eKYC Verification</h1>
             <div class="admin-actions">
                 <span id="adminName">Admin</span>
-                <button class="btn-logout" onclick="handleAdminLogout()">Logout</button>
+                <button class="btn-logout" onclick="refreshAdminPanel()">Refresh Panel</button>
             </div>
         </header>
 
