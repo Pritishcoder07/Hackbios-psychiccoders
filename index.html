@@ -1,0 +1,380 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="GlobalGuard Exports - Secure your export profits with AI-powered currency protection and safe shipments">
+    <title>GlobalGuard Exports - Secure Your Export Profits</title>
+    <link rel="stylesheet" href="styles.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <!-- Firebase SDK -->
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
+</head>
+<body>
+    <!-- Navbar -->
+    <nav class="navbar" role="navigation" aria-label="Main navigation">
+        <div class="container">
+            <div class="nav-wrapper">
+                <div class="logo">
+                    <span class="logo-text" aria-label="GlobalGuard Exports">GlobalGuard Exports</span>
+                </div>
+                <ul class="nav-menu" id="navMenu" role="menubar">
+                    <li role="none"><a href="#home" class="nav-link" role="menuitem">Home</a></li>
+                    <li role="none"><a href="#about" class="nav-link" role="menuitem">About Us</a></li>
+                    <li role="none"><a href="#services" class="nav-link" role="menuitem">Services</a></li>
+                    <li role="none"><a href="#contact" class="nav-link" role="menuitem">Contact</a></li>
+                </ul>
+                <button class="btn-get-started btn-primary" aria-label="Get started with GlobalGuard Exports" onclick="openAuthModal('login')">Get Started</button>
+                <button class="hamburger" id="hamburger" aria-label="Toggle navigation menu" aria-expanded="false">
+                    <span></span>
+                    <span></span>
+                    <span></span>
+                </button>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Hero Section -->
+    <section id="home" class="hero" aria-label="Hero section">
+        <div class="container">
+            <div class="hero-wrapper">
+                <div class="hero-content">
+                    <h1 class="hero-headline">
+                        Secure Your Export Profits with AI-Powered Currency Protection & Safe Shipments
+                    </h1>
+                    <p class="hero-subheadline">
+                        A smart platform that helps exporters lock exchange rates, insure shipments, and track cargo with complete transparency.
+                    </p>
+                    <div class="hero-buttons">
+                    <button class="btn btn-primary" aria-label="Start hedging your exports" onclick="openAuthModal('signup')">Start Hedging</button>
+                    <button class="btn btn-secondary" aria-label="Explore our services" onclick="openAuthModal('login')">Explore Services</button>
+                    </div>
+                    
+                </div>
+                <div class="hero-image-wrapper">
+                    <img src="https://images.unsplash.com/photo-1553729459-efe14ef6055d?w=800&h=600&fit=crop&q=80" 
+                         alt="Modern digital platform for export management with AI-powered currency protection" 
+                         class="hero-image"
+                         loading="eager">
+                </div>
+            </div>
+            <div class="hero-highlights" role="list">
+                <div class="highlight-item" role="listitem">
+                    <div class="highlight-icon" aria-hidden="true">🔒</div>
+                    <span>Real-time Forward Contract Protection</span>
+                </div>
+                <div class="highlight-item" role="listitem">
+                    <div class="highlight-icon" aria-hidden="true">🤖</div>
+                    <span>AI-recommended Insurance Plans</span>
+                </div>
+                <div class="highlight-item" role="listitem">
+                    <div class="highlight-icon" aria-hidden="true">📱</div>
+                    <span>QR-based Shipment Tracking</span>
+                </div>
+                <div class="highlight-item" role="listitem">
+                    <div class="highlight-icon" aria-hidden="true">⚡</div>
+                    <span>Faster International Payments</span>
+                </div>
+            </div>
+        </div>
+        <div class="hero-background" aria-hidden="true"></div>
+    </section>
+    <!-- About Us Section -->
+    <section id="about" class="about" aria-label="About us section">
+        <div class="container">
+            <div class="section-header">
+                <h2 class="section-title">About Us</h2>
+            </div>
+            <div class="about-wrapper">
+                <div class="about-image-wrapper">
+                    <img src="https://images.unsplash.com/photo-1454165804606-c3d57bc86b40?w=800&h=600&fit=crop" 
+                         alt="Modern business team working on export and international trade solutions" 
+                         class="about-image"
+                         loading="lazy">
+                </div>
+                <div class="about-content">
+                    <p class="about-text">
+                        GlobalGuard Exports is built for modern exporters who face currency volatility, payment risks, and unpredictable logistics.
+                    </p>
+                    <p class="about-text">
+                        Our platform combines AI forecasting, secure documentation, and shipment tracking to help exporters protect their earnings and deliver goods safely—every single time.
+                    </p>
+                    <p class="about-text">
+                        We aim to make international trade safer, smarter, and more transparent for businesses of all sizes.
+                    </p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Services Section -->
+    <section id="services" class="services" aria-label="Services section">
+        <div class="container">
+            <div class="section-header">
+                <h2 class="section-title">Our Services</h2>
+            </div>
+            <div class="services-grid" role="list">
+                <article class="service-card" role="listitem">
+                    <div class="service-number" aria-hidden="true">1️⃣</div>
+                    <h3 class="service-title">Forward Contract Protection</h3>
+                    <p class="service-description">
+                        Lock today's currency rate for future payments and protect your business from unpredictable market movements.
+                    </p>
+                </article>
+                <article class="service-card" role="listitem">
+                    <div class="service-number" aria-hidden="true">2️⃣</div>
+                    <h3 class="service-title">AI-Based Insurance Recommendation</h3>
+                    <p class="service-description">
+                        Compare multiple insurance providers instantly. Get the best coverage based on your route, cargo type, and risk factors.
+                    </p>
+                </article>
+                <article class="service-card" role="listitem">
+                    <div class="service-number" aria-hidden="true">3️⃣</div>
+                    <h3 class="service-title">QR-Powered Shipment Tracking</h3>
+                    <p class="service-description">
+                        Generate a secure QR code for every shipment. Track live status, documents, delays, and customs updates in one place.
+                    </p>
+                </article>
+                <article class="service-card" role="listitem">
+                    <div class="service-number" aria-hidden="true">4️⃣</div>
+                    <h3 class="service-title">Secure International Payments</h3>
+                    <p class="service-description">
+                        Make fast, compliant cross-border payments linked directly to your shipments and contracts.
+                    </p>
+                </article>
+                <article class="service-card" role="listitem">
+                    <div class="service-number" aria-hidden="true">5️⃣</div>
+                    <h3 class="service-title">Export Document Management</h3>
+                    <p class="service-description">
+                        Upload, verify, and share all trade documents digitally—invoice, packing list, insurance, and more.
+                    </p>
+                </article>
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer id="contact" class="footer" role="contentinfo">
+        <div class="container">
+            <div class="footer-content">
+                <div class="footer-section">
+                    <h3 class="footer-title">Contact Us</h3>
+                    <div class="contact-details">
+                        <div class="contact-item">
+                            <span class="contact-icon" aria-hidden="true">📍</span>
+                            <address>Mumbai, Maharashtra, India</address>
+                        </div>
+                        <div class="contact-item">
+                            <span class="contact-icon" aria-hidden="true">📞</span>
+                            <a href="tel:+919876543210" aria-label="Call us">+91 98765 43210</a>
+                        </div>
+                        <div class="contact-item">
+                            <span class="contact-icon" aria-hidden="true">📧</span>
+                            <a href="mailto:support@globalguardexports.com" aria-label="Email us">support@globalguardexports.com</a>
+                        </div>
+                    </div>
+                </div>
+                <div class="footer-section">
+                    <h3 class="footer-title">Quick Links</h3>
+                    <ul class="footer-links">
+                        <li><a href="#home">Home</a></li>
+                        <li><a href="#about">About Us</a></li>
+                        <li><a href="#services">Services</a></li>
+                        <li><a href="#contact">Privacy Policy</a></li>
+                        <li><a href="#contact">Terms & Conditions</a></li>
+                    </ul>
+                </div>
+            </div>
+            <div class="footer-bottom">
+                <p>&copy; 2025 GlobalGuard Exports — All Rights Reserved.</p>
+            </div>
+        </div>
+    </footer>
+
+    <!-- Auth Modal -->
+    <div id="authModal" class="auth-modal" role="dialog" aria-labelledby="authModalTitle" aria-hidden="true">
+        <div class="auth-modal-overlay" onclick="closeAuthModal()"></div>
+        <div class="auth-modal-container">
+            <button class="auth-modal-close" onclick="closeAuthModal()" aria-label="Close modal">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <line x1="18" y1="6" x2="6" y2="18"></line>
+                    <line x1="6" y1="6" x2="18" y2="18"></line>
+                </svg>
+            </button>
+            
+            <div class="auth-modal-content">
+                <!-- Tab Switcher -->
+                <div class="auth-tabs">
+                    <button class="auth-tab active" data-tab="login" onclick="switchAuthTab('login')">
+                        <span>Login</span>
+                    </button>
+                    <button class="auth-tab" data-tab="signup" onclick="switchAuthTab('signup')">
+                        <span>Sign Up</span>
+                    </button>
+                </div>
+
+                <!-- Login Form -->
+                <div id="loginForm" class="auth-form active">
+                    <h2 id="authModalTitle" class="auth-form-title">Welcome Back</h2>
+                    <p class="auth-form-subtitle">Login to your exporter account</p>
+                    
+                    <!-- Login Method Toggle -->
+                    <div class="login-method-toggle">
+                        <button class="method-btn active" data-method="email" onclick="switchLoginMethod('email')">
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"></path>
+                                <polyline points="22,6 12,13 2,6"></polyline>
+                            </svg>
+                            Email/Username
+                        </button>
+                        <button class="method-btn" data-method="otp" onclick="switchLoginMethod('otp')">
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <rect x="2" y="6" width="20" height="12" rx="2"></rect>
+                                <path d="M6 10h.01M10 10h.01M14 10h.01M18 10h.01"></path>
+                            </svg>
+                            OTP
+                        </button>
+                    </div>
+
+                    <!-- Email/Password Login -->
+                    <div id="emailLoginForm" class="login-method-form active">
+                        <form id="emailLoginFormElement" onsubmit="handleEmailLogin(event)">
+                            <div class="form-group">
+                                <label for="loginEmail">Email or Username</label>
+                                <input type="text" id="loginEmail" name="email" placeholder="Enter your email or username" required autocomplete="username">
+                            </div>
+                            <div class="form-group">
+                                <label for="loginPassword">Password</label>
+                                <div class="password-input-wrapper">
+                                    <input type="password" id="loginPassword" name="password" placeholder="Enter your password" required autocomplete="current-password">
+                                    <button type="button" class="password-toggle" onclick="togglePassword('loginPassword')" aria-label="Toggle password visibility">
+                                        <svg class="eye-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                            <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
+                                            <circle cx="12" cy="12" r="3"></circle>
+                                        </svg>
+                                    </button>
+                                </div>
+                            </div>
+                            <div class="form-options">
+                                <label class="checkbox-label">
+                                    <input type="checkbox" name="remember">
+                                    <span>Remember me</span>
+                                </label>
+                                <a href="#" class="forgot-password-link" onclick="handleForgotPassword(event)">Forgot Password?</a>
+                            </div>
+                            <button type="submit" class="btn-submit" id="emailLoginBtn">
+                                <span class="btn-text">Login</span>
+                                <span class="btn-loader"></span>
+                            </button>
+                        </form>
+                    </div>
+
+                    <!-- OTP Login -->
+                    <div id="otpLoginForm" class="login-method-form">
+                        <form id="otpLoginFormElement" onsubmit="handleOTPLogin(event)">
+                            <div class="form-group">
+                                <label for="otpEmail">Email or Phone</label>
+                                <input type="text" id="otpEmail" name="otpEmail" placeholder="Enter your email or phone number" required>
+                            </div>
+                            <div class="form-group" id="otpCodeGroup" style="display: none;">
+                                <label for="otpCode">Enter OTP</label>
+                                <input type="text" id="otpCode" name="otpCode" placeholder="Enter 6-digit OTP" maxlength="6" pattern="[0-9]{6}">
+                            </div>
+                            <button type="submit" class="btn-submit" id="otpLoginBtn">
+                                <span class="btn-text" id="otpBtnText">Send OTP</span>
+                                <span class="btn-loader"></span>
+                            </button>
+                        </form>
+                    </div>
+                </div>
+
+                <!-- Signup Form -->
+                <div id="signupForm" class="auth-form">
+                    <h2 class="auth-form-title">Create Account</h2>
+                    <p class="auth-form-subtitle">Join GlobalGuard Exports today</p>
+                    
+                    <form id="signupFormElement" onsubmit="handleSignup(event)">
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="signupName">Full Name / Username</label>
+                                <input type="text" id="signupName" name="name" placeholder="Enter your full name" required autocomplete="name">
+                            </div>
+                            <div class="form-group">
+                                <label for="companyName">Company Name</label>
+                                <input type="text" id="companyName" name="company" placeholder="Enter company name" required>
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label for="signupEmail">Email Address</label>
+                            <input type="email" id="signupEmail" name="email" placeholder="Enter your email" required autocomplete="email">
+                        </div>
+                        <div class="form-group">
+                            <label for="signupPassword">Password</label>
+                            <div class="password-input-wrapper">
+                                <input type="password" id="signupPassword" name="password" placeholder="Create a strong password" required autocomplete="new-password">
+                                <button type="button" class="password-toggle" onclick="togglePassword('signupPassword')" aria-label="Toggle password visibility">
+                                    <svg class="eye-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                        <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
+                                        <circle cx="12" cy="12" r="3"></circle>
+                                    </svg>
+                                </button>
+                            </div>
+                            <div class="password-strength" id="passwordStrength"></div>
+                        </div>
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="country">Country</label>
+                                <select id="country" name="country" required>
+                                    <option value="">Select Country</option>
+                                    <option value="IN">India</option>
+                                    <option value="US">United States</option>
+                                    <option value="GB">United Kingdom</option>
+                                    <option value="CA">Canada</option>
+                                    <option value="AU">Australia</option>
+                                    <option value="DE">Germany</option>
+                                    <option value="FR">France</option>
+                                    <option value="JP">Japan</option>
+                                    <option value="CN">China</option>
+                                    <option value="BR">Brazil</option>
+                                    <option value="MX">Mexico</option>
+                                    <option value="AE">United Arab Emirates</option>
+                                    <option value="SG">Singapore</option>
+                                    <option value="NL">Netherlands</option>
+                                    <option value="IT">Italy</option>
+                                    <option value="ES">Spain</option>
+                                    <option value="KR">South Korea</option>
+                                    <option value="SA">Saudi Arabia</option>
+                                    <option value="ZA">South Africa</option>
+                                    <option value="OTHER">Other</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label for="address">Exact Address</label>
+                            <textarea id="address" name="address" rows="3" placeholder="Enter your complete address" required></textarea>
+                        </div>
+                        <div class="form-options">
+                            <label class="checkbox-label">
+                                <input type="checkbox" name="terms" required>
+                                <span>I agree to the <a href="#" target="_blank">Terms & Conditions</a> and <a href="#" target="_blank">Privacy Policy</a></span>
+                            </label>
+                        </div>
+                        <button type="submit" class="btn-submit" id="signupBtn">
+                            <span class="btn-text">Create Account</span>
+                            <span class="btn-loader"></span>
+                        </button>
+                    </form>
+                </div>
+
+                <!-- Error/Success Messages -->
+                <div id="authMessage" class="auth-message"></div>
+            </div>
+        </div>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>

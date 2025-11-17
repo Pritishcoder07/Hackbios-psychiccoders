@@ -1,0 +1,641 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Export Dashboard - GlobalGuard Exports</title>
+    <link rel="stylesheet" href="../styles.css">
+    <link rel="stylesheet" href="dashboard-styles.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <!-- Firebase SDK -->
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-database-compat.js"></script>
+</head>
+<body>
+    <!-- Dashboard Layout -->
+    <div class="dashboard-container">
+        <!-- Sidebar -->
+        <aside class="dashboard-sidebar" id="sidebar">
+            <div class="sidebar-header">
+                <div class="logo">
+                    <span class="logo-text">GlobalGuard</span>
+                </div>
+                <button class="sidebar-toggle" id="sidebarToggle" aria-label="Toggle sidebar">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <line x1="18" y1="6" x2="6" y2="18"></line>
+                        <line x1="6" y1="6" x2="18" y2="18"></line>
+                    </svg>
+                </button>
+            </div>
+            
+            <nav class="sidebar-nav">
+                <ul class="nav-list">
+                    <li class="nav-item">
+                        <a href="#dashboard" class="nav-link active" data-tab="dashboard">
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <rect x="3" y="3" width="7" height="7"></rect>
+                                <rect x="14" y="3" width="7" height="7"></rect>
+                                <rect x="14" y="14" width="7" height="7"></rect>
+                                <rect x="3" y="14" width="7" height="7"></rect>
+                            </svg>
+                            <span>Dashboard</span>
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a href="#contracts" class="nav-link" data-tab="contracts">
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+                                <polyline points="14 2 14 8 20 8"></polyline>
+                                <line x1="16" y1="13" x2="8" y2="13"></line>
+                                <line x1="16" y1="17" x2="8" y2="17"></line>
+                                <polyline points="10 9 9 9 8 9"></polyline>
+                            </svg>
+                            <span>Forward Contracts</span>
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a href="#insurance" class="nav-link" data-tab="insurance">
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path>
+                            </svg>
+                            <span>Insurance</span>
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a href="#shipments" class="nav-link" data-tab="shipments">
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"></path>
+                                <polyline points="3.27 6.96 12 12.01 20.73 6.96"></polyline>
+                                <line x1="12" y1="22.08" x2="12" y2="12"></line>
+                            </svg>
+                            <span>Shipments</span>
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a href="#payments" class="nav-link" data-tab="payments">
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <rect x="1" y="4" width="22" height="16" rx="2" ry="2"></rect>
+                                <line x1="1" y1="10" x2="23" y2="10"></line>
+                            </svg>
+                            <span>Payments</span>
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a href="#documents" class="nav-link" data-tab="documents">
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+                                <polyline points="14 2 14 8 20 8"></polyline>
+                                <line x1="16" y1="13" x2="8" y2="13"></line>
+                                <line x1="16" y1="17" x2="8" y2="17"></line>
+                                <polyline points="10 9 9 9 8 9"></polyline>
+                            </svg>
+                            <span>Documents</span>
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a href="#analytics" class="nav-link" data-tab="analytics">
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <line x1="18" y1="20" x2="18" y2="10"></line>
+                                <line x1="12" y1="20" x2="12" y2="4"></line>
+                                <line x1="6" y1="20" x2="6" y2="14"></line>
+                            </svg>
+                            <span>Analytics</span>
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a href="#support" class="nav-link" data-tab="support">
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <circle cx="12" cy="12" r="10"></circle>
+                                <path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"></path>
+                                <line x1="12" y1="17" x2="12.01" y2="17"></line>
+                            </svg>
+                            <span>Support</span>
+                        </a>
+                    </li>
+                </ul>
+            </nav>
+        </aside>
+
+        <!-- Main Content Area -->
+        <div class="dashboard-main">
+            <!-- Top Header -->
+            <header class="dashboard-header">
+                <div class="header-left">
+                    <button class="mobile-menu-toggle" id="mobileMenuToggle" aria-label="Toggle menu">
+                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <line x1="3" y1="12" x2="21" y2="12"></line>
+                            <line x1="3" y1="6" x2="21" y2="6"></line>
+                            <line x1="3" y1="18" x2="21" y2="18"></line>
+                        </svg>
+                    </button>
+                    <h1 class="page-title" id="pageTitle">Dashboard</h1>
+                </div>
+                <div class="header-right">
+                    <button class="notification-btn" aria-label="Notifications">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path>
+                            <path d="M13.73 21a2 2 0 0 1-3.46 0"></path>
+                        </svg>
+                        <span class="notification-badge">3</span>
+                    </button>
+                    <div class="profile-dropdown">
+                        <button class="profile-btn" id="profileBtn" onclick="openProfileModal()" aria-label="Profile">
+                            <div class="profile-avatar" id="profileAvatar">
+                                <span id="avatarInitials">U</span>
+                            </div>
+                            <span class="profile-name" id="profileName">User</span>
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <polyline points="6 9 12 15 18 9"></polyline>
+                            </svg>
+                        </button>
+                    </div>
+                </div>
+            </header>
+
+            <!-- Dashboard Content -->
+            <main class="dashboard-content">
+                <div class="content-section active" id="dashboardSection">
+                    <div class="welcome-card">
+                        <h2>Welcome back, <span id="welcomeName">Exporter</span>!</h2>
+                        <p>Manage your exports, contracts, and shipments from one place.</p>
+                    </div>
+                    <div class="stats-grid">
+                        <div class="stat-card">
+                            <div class="stat-icon">📊</div>
+                            <div class="stat-info">
+                                <h3>Active Contracts</h3>
+                                <p class="stat-value">0</p>
+                            </div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-icon">🚢</div>
+                            <div class="stat-info">
+                                <h3>Active Shipments</h3>
+                                <p class="stat-value">0</p>
+                            </div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-icon">💰</div>
+                            <div class="stat-info">
+                                <h3>Total Value</h3>
+                                <p class="stat-value">$0</p>
+                            </div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-icon">📈</div>
+                            <div class="stat-info">
+                                <h3>This Month</h3>
+                                <p class="stat-value">0</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Other sections will be dynamically shown -->
+                <div class="content-section" id="contractsSection" style="display: none;">
+                    <h2>Forward Contracts</h2>
+                    <p>Manage your currency forward contracts here.</p>
+                </div>
+
+                <div class="content-section" id="insuranceSection" style="display: none;">
+                    <h2>Insurance</h2>
+                    <p>View and manage your insurance policies.</p>
+                </div>
+
+                <div class="content-section" id="shipmentsSection" style="display: none;">
+                    <h2>Shipments</h2>
+                    <p>Track and manage your shipments.</p>
+                </div>
+
+                <div class="content-section" id="paymentsSection" style="display: none;">
+                    <h2>Payments</h2>
+                    <p>Manage your payments and transactions.</p>
+                </div>
+
+                <div class="content-section" id="documentsSection" style="display: none;">
+                    <h2>Documents</h2>
+                    <p>View and manage your documents.</p>
+                </div>
+
+                <div class="content-section" id="analyticsSection" style="display: none;">
+                    <h2>Analytics</h2>
+                    <p>View your export analytics and reports.</p>
+                </div>
+
+                <div class="content-section" id="supportSection" style="display: none;">
+                    <h2>Support</h2>
+                    <p>Get help and support for your exports.</p>
+                </div>
+            </main>
+        </div>
+    </div>
+
+    <!-- Profile Modal -->
+    <div id="profileModal" class="profile-modal" role="dialog" aria-labelledby="profileModalTitle" aria-hidden="true">
+        <div class="profile-modal-overlay" onclick="closeProfileModal()"></div>
+        <div class="profile-modal-container">
+            <button class="profile-modal-close" onclick="closeProfileModal()" aria-label="Close modal">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <line x1="18" y1="6" x2="6" y2="18"></line>
+                    <line x1="6" y1="6" x2="18" y2="18"></line>
+                </svg>
+            </button>
+            
+            <div class="profile-modal-content">
+                <div class="profile-modal-header">
+                    <h2 id="profileModalTitle">Profile Settings</h2>
+                    <p>Manage your exporter profile and account settings</p>
+                </div>
+
+                <!-- Profile Tabs -->
+                <div class="profile-tabs">
+                    <button class="profile-tab active" data-section="basic" onclick="switchProfileTab('basic')">Basic Info</button>
+                    <button class="profile-tab" data-section="business" onclick="switchProfileTab('business')">Business</button>
+                    <button class="profile-tab" data-section="compliance" onclick="switchProfileTab('compliance')">Compliance</button>
+                    <button class="profile-tab" data-section="products" onclick="switchProfileTab('products')">Products</button>
+                    <button class="profile-tab" data-section="address" onclick="switchProfileTab('address')">Address</button>
+                    <button class="profile-tab" data-section="banking" onclick="switchProfileTab('banking')">Banking</button>
+                    <button class="profile-tab" data-section="documents" onclick="switchProfileTab('documents')">Documents</button>
+                    <button class="profile-tab" data-section="settings" onclick="switchProfileTab('settings')">Settings</button>
+                </div>
+
+                <!-- Profile Sections -->
+                <div class="profile-sections">
+                    <!-- 1. Basic Information -->
+                    <div id="basicSection" class="profile-section active">
+                        <h3>Basic Information</h3>
+                        <form id="basicInfoForm" onsubmit="saveBasicInfo(event)">
+                            <div class="form-group">
+                                <label for="fullName">Full Name *</label>
+                                <input type="text" id="fullName" name="fullName" required>
+                            </div>
+                            <div class="form-group">
+                                <label for="profilePhoto">Profile Photo</label>
+                                <div class="photo-upload-wrapper">
+                                    <div class="photo-preview" id="photoPreview">
+                                        <img id="photoPreviewImg" src="" alt="Profile photo" style="display: none;">
+                                        <span id="photoPreviewText">No photo</span>
+                                    </div>
+                                    <input type="file" id="profilePhoto" name="profilePhoto" accept="image/*" onchange="handlePhotoUpload(event)">
+                                    <label for="profilePhoto" class="upload-btn">Upload Photo</label>
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <label for="email">Email</label>
+                                <input type="email" id="email" name="email" readonly>
+                            </div>
+                            <div class="form-group">
+                                <label for="phoneNumber">Phone Number *</label>
+                                <input type="tel" id="phoneNumber" name="phoneNumber" required>
+                            </div>
+                            <div class="form-group">
+                                <label for="alternatePhone">Alternate Phone</label>
+                                <input type="tel" id="alternatePhone" name="alternatePhone">
+                            </div>
+                            <button type="submit" class="btn-save">Save Changes</button>
+                        </form>
+                    </div>
+
+                    <!-- 2. Business Details -->
+                    <div id="businessSection" class="profile-section">
+                        <h3>Business Details</h3>
+                        <form id="businessForm" onsubmit="saveBusinessInfo(event)">
+                            <div class="form-group">
+                                <label for="companyName">Company Name *</label>
+                                <input type="text" id="companyName" name="companyName" required>
+                            </div>
+                            <div class="form-group">
+                                <label for="businessType">Business Type *</label>
+                                <select id="businessType" name="businessType" required>
+                                    <option value="">Select Business Type</option>
+                                    <option value="sole-proprietorship">Sole Proprietorship</option>
+                                    <option value="partnership">Partnership</option>
+                                    <option value="pvt-ltd">Pvt Ltd</option>
+                                    <option value="llp">LLP</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label for="yearEstablished">Year of Establishment *</label>
+                                <input type="number" id="yearEstablished" name="yearEstablished" min="1900" max="2025" required>
+                            </div>
+                            <div class="form-group">
+                                <label for="businessCategory">Business Category *</label>
+                                <select id="businessCategory" name="businessCategory" required>
+                                    <option value="">Select Category</option>
+                                    <option value="agriculture">Agriculture</option>
+                                    <option value="textile">Textile</option>
+                                    <option value="machinery">Machinery</option>
+                                    <option value="electronics">Electronics</option>
+                                    <option value="pharmaceuticals">Pharmaceuticals</option>
+                                    <option value="chemicals">Chemicals</option>
+                                    <option value="food">Food & Beverages</option>
+                                    <option value="other">Other</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label for="companyWebsite">Company Website</label>
+                                <input type="url" id="companyWebsite" name="companyWebsite" placeholder="https://example.com">
+                            </div>
+                            <div class="form-group">
+                                <label for="companyDescription">Company Description</label>
+                                <textarea id="companyDescription" name="companyDescription" rows="4" placeholder="Brief description of your company"></textarea>
+                            </div>
+                            <button type="submit" class="btn-save">Save Changes</button>
+                        </form>
+                    </div>
+
+                    <!-- 3. Compliance & Government IDs -->
+                    <div id="complianceSection" class="profile-section">
+                        <h3>Compliance & Government IDs</h3>
+                        <form id="complianceForm" onsubmit="saveComplianceInfo(event)">
+                            <div class="form-group">
+                                <label for="iecNumber">Import Export Code (IEC Number) *</label>
+                                <input type="text" id="iecNumber" name="iecNumber" required>
+                            </div>
+                            <div class="form-group">
+                                <label for="gstNumber">GST Number *</label>
+                                <input type="text" id="gstNumber" name="gstNumber" required>
+                            </div>
+                            <div class="form-group">
+                                <label for="panNumber">PAN Number *</label>
+                                <input type="text" id="panNumber" name="panNumber" required>
+                            </div>
+                            <div class="form-group">
+                                <label for="cinNumber">Company Registration Number (CIN)</label>
+                                <input type="text" id="cinNumber" name="cinNumber">
+                            </div>
+                            <div class="form-group">
+                                <label for="dgftRegion">DGFT Region/Office</label>
+                                <input type="text" id="dgftRegion" name="dgftRegion">
+                            </div>
+                            <button type="submit" class="btn-save">Save Changes</button>
+                        </form>
+                    </div>
+
+                    <!-- 4. Product & Export Info -->
+                    <div id="productsSection" class="profile-section">
+                        <h3>Product & Export Information</h3>
+                        <form id="productsForm" onsubmit="saveProductsInfo(event)">
+                            <div class="form-group">
+                                <label for="primaryProduct">Primary Export Product *</label>
+                                <input type="text" id="primaryProduct" name="primaryProduct" required>
+                            </div>
+                            <div class="form-group">
+                                <label for="productCategory">Product Category *</label>
+                                <select id="productCategory" name="productCategory" required>
+                                    <option value="">Select Category</option>
+                                    <option value="agriculture">Agriculture</option>
+                                    <option value="textile">Textile</option>
+                                    <option value="machinery">Machinery</option>
+                                    <option value="electronics">Electronics</option>
+                                    <option value="pharmaceuticals">Pharmaceuticals</option>
+                                    <option value="chemicals">Chemicals</option>
+                                    <option value="food">Food & Beverages</option>
+                                    <option value="other">Other</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label for="hsCode">HS Code (Optional)</label>
+                                <input type="text" id="hsCode" name="hsCode" placeholder="e.g., 1234.56.78">
+                            </div>
+                            <div class="form-group">
+                                <label for="targetCountries">Target Countries *</label>
+                                <div class="multi-select-wrapper">
+                                    <select id="targetCountries" name="targetCountries" multiple required>
+                                        <option value="US">United States</option>
+                                        <option value="AE">United Arab Emirates</option>
+                                        <option value="GB">United Kingdom</option>
+                                        <option value="CA">Canada</option>
+                                        <option value="AU">Australia</option>
+                                        <option value="DE">Germany</option>
+                                        <option value="FR">France</option>
+                                        <option value="JP">Japan</option>
+                                        <option value="CN">China</option>
+                                        <option value="BR">Brazil</option>
+                                        <option value="MX">Mexico</option>
+                                        <option value="SG">Singapore</option>
+                                        <option value="NL">Netherlands</option>
+                                        <option value="IT">Italy</option>
+                                        <option value="ES">Spain</option>
+                                        <option value="KR">South Korea</option>
+                                        <option value="SA">Saudi Arabia</option>
+                                        <option value="ZA">South Africa</option>
+                                    </select>
+                                    <small>Hold Ctrl/Cmd to select multiple countries</small>
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <label for="monthlyVolume">Average Monthly Shipment Volume</label>
+                                <input type="text" id="monthlyVolume" name="monthlyVolume" placeholder="e.g., 100 units, 50 containers">
+                            </div>
+                            <div class="form-group">
+                                <label for="shippingMethod">Preferred Shipping Method *</label>
+                                <select id="shippingMethod" name="shippingMethod" required>
+                                    <option value="">Select Method</option>
+                                    <option value="air">Air</option>
+                                    <option value="sea">Sea</option>
+                                    <option value="land">Land</option>
+                                </select>
+                            </div>
+                            <button type="submit" class="btn-save">Save Changes</button>
+                        </form>
+                    </div>
+
+                    <!-- 5. Business Address -->
+                    <div id="addressSection" class="profile-section">
+                        <h3>Business Address</h3>
+                        <form id="addressForm" onsubmit="saveAddressInfo(event)">
+                            <div class="form-group">
+                                <label for="businessAddress">Registered Business Address *</label>
+                                <textarea id="businessAddress" name="businessAddress" rows="3" required></textarea>
+                            </div>
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label for="city">City *</label>
+                                    <input type="text" id="city" name="city" required>
+                                </div>
+                                <div class="form-group">
+                                    <label for="state">State *</label>
+                                    <input type="text" id="state" name="state" required>
+                                </div>
+                            </div>
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label for="country">Country *</label>
+                                    <input type="text" id="country" name="country" required>
+                                </div>
+                                <div class="form-group">
+                                    <label for="pincode">Pincode *</label>
+                                    <input type="text" id="pincode" name="pincode" required>
+                                </div>
+                            </div>
+                            <button type="submit" class="btn-save">Save Changes</button>
+                        </form>
+                    </div>
+
+                    <!-- 6. Banking Details -->
+                    <div id="bankingSection" class="profile-section">
+                        <h3>Banking Details</h3>
+                        <form id="bankingForm" onsubmit="saveBankingInfo(event)">
+                            <div class="form-group">
+                                <label for="bankName">Bank Name</label>
+                                <input type="text" id="bankName" name="bankName">
+                            </div>
+                            <div class="form-group">
+                                <label for="accountHolderName">Account Holder Name</label>
+                                <input type="text" id="accountHolderName" name="accountHolderName">
+                            </div>
+                            <div class="form-group">
+                                <label for="accountNumber">Account Number</label>
+                                <input type="text" id="accountNumber" name="accountNumber">
+                            </div>
+                            <div class="form-group">
+                                <label for="ifscCode">IFSC Code / SWIFT Code</label>
+                                <input type="text" id="ifscCode" name="ifscCode">
+                            </div>
+                            <div class="form-group">
+                                <label for="paymentMethod">Preferred Payment Method</label>
+                                <select id="paymentMethod" name="paymentMethod">
+                                    <option value="">Select Method</option>
+                                    <option value="wire-transfer">Wire Transfer</option>
+                                    <option value="letter-of-credit">Letter of Credit</option>
+                                    <option value="documentary-collection">Documentary Collection</option>
+                                    <option value="open-account">Open Account</option>
+                                </select>
+                            </div>
+                            <button type="submit" class="btn-save">Save Changes</button>
+                        </form>
+                    </div>
+
+                    <!-- 7. Document Uploads -->
+                    <div id="documentsSection" class="profile-section">
+                        <h3>Document Uploads</h3>
+                        <form id="documentsForm" onsubmit="saveDocumentsInfo(event)">
+                            <div class="document-upload-grid">
+                                <div class="document-upload-item">
+                                    <label for="iecCertificate">IEC Certificate</label>
+                                    <div class="file-upload-wrapper">
+                                        <input type="file" id="iecCertificate" name="iecCertificate" accept=".pdf,.jpg,.jpeg,.png" onchange="handleDocumentUpload(event, 'iecCertificate')">
+                                        <label for="iecCertificate" class="file-upload-btn">
+                                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                                                <polyline points="17 8 12 3 7 8"></polyline>
+                                                <line x1="12" y1="3" x2="12" y2="15"></line>
+                                            </svg>
+                                            Upload File
+                                        </label>
+                                        <div class="file-preview" id="iecCertificatePreview"></div>
+                                    </div>
+                                </div>
+                                <div class="document-upload-item">
+                                    <label for="gstCertificate">GST Certificate</label>
+                                    <div class="file-upload-wrapper">
+                                        <input type="file" id="gstCertificate" name="gstCertificate" accept=".pdf,.jpg,.jpeg,.png" onchange="handleDocumentUpload(event, 'gstCertificate')">
+                                        <label for="gstCertificate" class="file-upload-btn">
+                                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                                                <polyline points="17 8 12 3 7 8"></polyline>
+                                                <line x1="12" y1="3" x2="12" y2="15"></line>
+                                            </svg>
+                                            Upload File
+                                        </label>
+                                        <div class="file-preview" id="gstCertificatePreview"></div>
+                                    </div>
+                                </div>
+                                <div class="document-upload-item">
+                                    <label for="companyRegistration">Company Registration Certificate</label>
+                                    <div class="file-upload-wrapper">
+                                        <input type="file" id="companyRegistration" name="companyRegistration" accept=".pdf,.jpg,.jpeg,.png" onchange="handleDocumentUpload(event, 'companyRegistration')">
+                                        <label for="companyRegistration" class="file-upload-btn">
+                                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                                                <polyline points="17 8 12 3 7 8"></polyline>
+                                                <line x1="12" y1="3" x2="12" y2="15"></line>
+                                            </svg>
+                                            Upload File
+                                        </label>
+                                        <div class="file-preview" id="companyRegistrationPreview"></div>
+                                    </div>
+                                </div>
+                                <div class="document-upload-item">
+                                    <label for="ownerIdProof">Owner ID Proof (Aadhar/Passport)</label>
+                                    <div class="file-upload-wrapper">
+                                        <input type="file" id="ownerIdProof" name="ownerIdProof" accept=".pdf,.jpg,.jpeg,.png" onchange="handleDocumentUpload(event, 'ownerIdProof')">
+                                        <label for="ownerIdProof" class="file-upload-btn">
+                                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                                                <polyline points="17 8 12 3 7 8"></polyline>
+                                                <line x1="12" y1="3" x2="12" y2="15"></line>
+                                            </svg>
+                                            Upload File
+                                        </label>
+                                        <div class="file-preview" id="ownerIdProofPreview"></div>
+                                    </div>
+                                </div>
+                                <div class="document-upload-item">
+                                    <label for="addressProof">Address Proof</label>
+                                    <div class="file-upload-wrapper">
+                                        <input type="file" id="addressProof" name="addressProof" accept=".pdf,.jpg,.jpeg,.png" onchange="handleDocumentUpload(event, 'addressProof')">
+                                        <label for="addressProof" class="file-upload-btn">
+                                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                                                <polyline points="17 8 12 3 7 8"></polyline>
+                                                <line x1="12" y1="3" x2="12" y2="15"></line>
+                                            </svg>
+                                            Upload File
+                                        </label>
+                                        <div class="file-preview" id="addressProofPreview"></div>
+                                    </div>
+                                </div>
+                            </div>
+                            <button type="submit" class="btn-save">Save Documents</button>
+                        </form>
+                    </div>
+
+                    <!-- 8. Account Settings -->
+                    <div id="settingsSection" class="profile-section">
+                        <h3>Account Settings</h3>
+                        <form id="settingsForm" onsubmit="saveSettingsInfo(event)">
+                            <div class="form-group">
+                                <label for="currentPassword">Current Password</label>
+                                <input type="password" id="currentPassword" name="currentPassword">
+                            </div>
+                            <div class="form-group">
+                                <label for="newPassword">New Password</label>
+                                <input type="password" id="newPassword" name="newPassword">
+                            </div>
+                            <div class="form-group">
+                                <label for="confirmPassword">Confirm New Password</label>
+                                <input type="password" id="confirmPassword" name="confirmPassword">
+                            </div>
+                            <div class="form-group">
+                                <label for="newPhoneNumber">New Phone Number</label>
+                                <input type="tel" id="newPhoneNumber" name="newPhoneNumber">
+                            </div>
+                            <div class="form-group">
+                                <label class="checkbox-label">
+                                    <input type="checkbox" id="twoFactorAuth" name="twoFactorAuth">
+                                    <span>Enable 2FA / OTP Login</span>
+                                </label>
+                            </div>
+                            <button type="submit" class="btn-save">Save Changes</button>
+                        </form>
+                        <div class="logout-section">
+                            <button type="button" class="btn-logout" onclick="handleLogout()">Logout</button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Success/Error Messages -->
+                <div id="profileMessage" class="profile-message"></div>
+            </div>
+        </div>
+    </div>
+
+    <script src="dashboard-script.js"></script>
+</body>
+</html>
+
