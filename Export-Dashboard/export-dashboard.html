@@ -13,6 +13,7 @@
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-database-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
 </head>
 <body>
     <!-- Dashboard Layout -->
@@ -162,6 +163,42 @@
                         <h2>Welcome back, <span id="welcomeName">Exporter</span>!</h2>
                         <p>Manage your exports, contracts, and shipments from one place.</p>
                     </div>
+                    
+                    <!-- eKYC Section -->
+                    <div class="ekyc-section" id="ekycSection">
+                        <div class="ekyc-card" id="ekycCard">
+                            <div class="ekyc-content">
+                                <div class="ekyc-icon">🔐</div>
+                                <div class="ekyc-text">
+                                    <h3>Complete Your eKYC Verification</h3>
+                                    <p>Verify your identity to access all features and services.</p>
+                                </div>
+                            </div>
+                            <button class="btn-ekyc" id="ekycButton" onclick="openEKYCModal()">Complete eKYC</button>
+                        </div>
+                        <div class="ekyc-status-card" id="ekycStatusCard" style="display: none;">
+                            <div class="ekyc-status-content">
+                                <div class="ekyc-status-icon" id="ekycStatusIcon">✓</div>
+                                <div class="ekyc-status-text">
+                                    <h3 id="ekycStatusTitle">eKYC Status</h3>
+                                    <p id="ekycStatusMessage">Your eKYC verification status will appear here.</p>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Video Call Request Button (shown after eKYC submission) -->
+                        <div id="videoCallRequestCard" class="video-call-request-card" style="display: none;">
+                            <div class="video-call-request-content">
+                                <div class="request-icon">📹</div>
+                                <div class="request-text">
+                                    <h3>Complete Your Verification</h3>
+                                    <p>Schedule a video call with our agent to verify your identity and complete your eKYC.</p>
+                                </div>
+                                <button class="btn-request-call" onclick="requestVideoCall()">Request Video Call</button>
+                            </div>
+                        </div>
+                    </div>
+                    
                     <div class="stats-grid">
                         <div class="stat-card">
                             <div class="stat-icon">📊</div>
@@ -631,6 +668,217 @@
 
                 <!-- Success/Error Messages -->
                 <div id="profileMessage" class="profile-message"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- eKYC Modal -->
+    <div id="ekycModal" class="ekyc-modal" role="dialog" aria-labelledby="ekycModalTitle" aria-hidden="true">
+        <div class="ekyc-modal-overlay" onclick="closeEKYCModal()"></div>
+        <div class="ekyc-modal-container">
+            <button class="ekyc-modal-close" onclick="closeEKYCModal()" aria-label="Close modal">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <line x1="18" y1="6" x2="6" y2="18"></line>
+                    <line x1="6" y1="6" x2="18" y2="18"></line>
+                </svg>
+            </button>
+            
+            <div class="ekyc-modal-content">
+                <div class="ekyc-modal-header">
+                    <h2 id="ekycModalTitle">Verify Your Identity (eKYC)</h2>
+                    <p>Please complete the verification process to continue</p>
+                </div>
+
+                <form id="ekycForm" onsubmit="submitEKYC(event)">
+                    <!-- Identity Proof -->
+                    <div class="ekyc-form-section">
+                        <h3>Identity Proof</h3>
+                        <div class="form-group">
+                            <label for="identityProofType">Select ID Proof *</label>
+                            <select id="identityProofType" name="identityProofType" required onchange="handleIdentityProofChange()">
+                                <option value="">Select ID Proof</option>
+                                <!-- Options will be populated dynamically based on country -->
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label for="identityProofFile">Upload ID Proof *</label>
+                            <div class="file-upload-wrapper">
+                                <input type="file" id="identityProofFile" name="identityProofFile" accept=".pdf,.jpg,.jpeg,.png" required onchange="handleFilePreview(event, 'identityProof')">
+                                <label for="identityProofFile" class="file-upload-btn">
+                                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                        <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                                        <polyline points="17 8 12 3 7 8"></polyline>
+                                        <line x1="12" y1="3" x2="12" y2="15"></line>
+                                    </svg>
+                                    Upload File
+                                </label>
+                                <div class="file-preview" id="identityProofPreview"></div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Business Proof -->
+                    <div class="ekyc-form-section">
+                        <h3>Business Verification</h3>
+                        <div class="form-group">
+                            <label for="businessProofType">Select Business Proof *</label>
+                            <select id="businessProofType" name="businessProofType" required>
+                                <option value="">Select Business Proof</option>
+                                <!-- Options will be populated dynamically based on country -->
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label for="businessProofFile">Upload Business Proof *</label>
+                            <div class="file-upload-wrapper">
+                                <input type="file" id="businessProofFile" name="businessProofFile" accept=".pdf,.jpg,.jpeg,.png" required onchange="handleFilePreview(event, 'businessProof')">
+                                <label for="businessProofFile" class="file-upload-btn">
+                                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                        <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                                        <polyline points="17 8 12 3 7 8"></polyline>
+                                        <line x1="12" y1="3" x2="12" y2="15"></line>
+                                    </svg>
+                                    Upload File
+                                </label>
+                                <div class="file-preview" id="businessProofPreview"></div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Bank Proof -->
+                    <div class="ekyc-form-section">
+                        <h3>Bank Proof</h3>
+                        <div class="form-group">
+                            <label for="bankProofType">Select Bank Proof *</label>
+                            <select id="bankProofType" name="bankProofType" required>
+                                <option value="">Select Bank Proof</option>
+                                <!-- Options will be populated dynamically based on country -->
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label for="bankProofFile">Upload Bank Proof *</label>
+                            <div class="file-upload-wrapper">
+                                <input type="file" id="bankProofFile" name="bankProofFile" accept=".pdf,.jpg,.jpeg,.png" required onchange="handleFilePreview(event, 'bankProof')">
+                                <label for="bankProofFile" class="file-upload-btn">
+                                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                        <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                                        <polyline points="17 8 12 3 7 8"></polyline>
+                                        <line x1="12" y1="3" x2="12" y2="15"></line>
+                                    </svg>
+                                    Upload File
+                                </label>
+                                <div class="file-preview" id="bankProofPreview"></div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Selfie Verification -->
+                    <div class="ekyc-form-section">
+                        <h3>Selfie Verification</h3>
+                        <div class="form-group">
+                            <label>Capture Live Selfie *</label>
+                            <div class="camera-capture-wrapper">
+                                <div class="camera-preview-container" id="cameraPreviewContainer" style="display: none;">
+                                    <video id="cameraVideo" autoplay playsinline style="width: 100%; max-width: 400px; border-radius: 8px; background: #000;"></video>
+                                    <canvas id="cameraCanvas" style="display: none;"></canvas>
+                                </div>
+                                <div class="camera-controls">
+                                    <button type="button" class="btn-camera" id="startCameraBtn" onclick="startCamera()">
+                                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                            <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"></path>
+                                            <circle cx="12" cy="13" r="4"></circle>
+                                        </svg>
+                                        Open Camera
+                                    </button>
+                                    <button type="button" class="btn-capture" id="captureBtn" onclick="captureSelfie()" style="display: none;">
+                                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                            <circle cx="12" cy="12" r="10"></circle>
+                                        </svg>
+                                        Capture Photo
+                                    </button>
+                                    <button type="button" class="btn-cancel-camera" id="cancelCameraBtn" onclick="stopCamera()" style="display: none;">
+                                        Cancel
+                                    </button>
+                                </div>
+                                <div class="file-preview" id="selfiePreview"></div>
+                                <input type="hidden" id="selfieFile" name="selfieFile" required>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Success/Error Messages -->
+                    <div id="ekycMessage" class="ekyc-message"></div>
+
+                    <!-- Form Actions -->
+                    <div class="ekyc-form-actions">
+                        <button type="button" class="btn-cancel" onclick="closeEKYCModal()">Cancel</button>
+                        <button type="submit" class="btn-submit" id="ekycSubmitBtn">Submit eKYC</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Video Call Verification Modal -->
+    <div id="videoCallModal" class="video-call-modal" role="dialog" aria-labelledby="videoCallModalTitle" aria-hidden="true">
+        <div class="video-call-modal-overlay"></div>
+        <div class="video-call-modal-container">
+            <div class="video-call-header">
+                <h2 id="videoCallModalTitle">Video Call Verification</h2>
+                <button class="video-call-close" onclick="closeVideoCallModal()" aria-label="Close modal">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <line x1="18" y1="6" x2="6" y2="18"></line>
+                        <line x1="6" y1="6" x2="18" y2="18"></line>
+                    </svg>
+                </button>
+            </div>
+            
+            <div class="video-call-content">
+                <!-- Waiting for Agent -->
+                <div id="waitingForAgent" class="video-call-status">
+                    <div class="status-icon">📞</div>
+                    <h3>Requesting Video Call</h3>
+                    <p>Please wait while we connect you with an agent...</p>
+                    <div class="loading-spinner"></div>
+                </div>
+
+                <!-- Video Call Interface -->
+                <div id="videoCallInterface" class="video-call-interface" style="display: none;">
+                    <div class="video-container">
+                        <div class="video-wrapper remote-video">
+                            <video id="remoteVideo" autoplay playsinline></video>
+                            <div class="video-label">Agent</div>
+                        </div>
+                        <div class="video-wrapper local-video">
+                            <video id="localVideo" autoplay playsinline muted></video>
+                            <div class="video-label">You</div>
+                        </div>
+                    </div>
+                    <div class="video-controls">
+                        <button class="video-control-btn" id="muteBtn" onclick="toggleMute()">
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M11 5L6 9H2v6h4l5 4V5z"></path>
+                            </svg>
+                        </button>
+                        <button class="video-control-btn" id="videoBtn" onclick="toggleVideo()">
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M23 7l-7 5 7 5V7z"></path>
+                                <rect x="1" y="5" width="15" height="14" rx="2" ry="2"></rect>
+                            </svg>
+                        </button>
+                        <button class="video-control-btn end-call" onclick="endVideoCall()">
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"></path>
+                            </svg>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Call Ended -->
+                <div id="callEnded" class="video-call-status" style="display: none;">
+                    <div class="status-icon">✓</div>
+                    <h3>Verification Complete</h3>
+                    <p id="callEndedMessage">Your verification is being processed. You will be notified once it's complete.</p>
+                </div>
             </div>
         </div>
     </div>
