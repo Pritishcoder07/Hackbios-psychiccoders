@@ -170,7 +170,7 @@ function switchTab(tabName) {
             dashboard: 'Dashboard',
             contracts: 'Forward Contracts',
             insurance: 'Insurance',
-            shipments: 'Shipments',
+            products: 'Add Your Products',
             payments: 'Payments',
             documents: 'Documents',
             analytics: 'Analytics',
@@ -2740,6 +2740,474 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 
 // ============================================
+// PRODUCTS MODULE
+// ============================================
+
+let productsCache = [];
+let productImageData = {
+    base64: '',
+    fileName: '',
+    fileType: ''
+};
+let productModuleInitialized = false;
+
+function initializeProductModule() {
+    if (productModuleInitialized) return;
+
+    const productForm = document.getElementById('productForm');
+    const productImageInput = document.getElementById('productImage');
+
+    if (productForm) {
+        productForm.addEventListener('submit', handleProductSubmit);
+    }
+
+    if (productImageInput) {
+        productImageInput.addEventListener('change', handleProductImageChange);
+    }
+
+    productModuleInitialized = true;
+    
+    // Attempt initial load (will no-op if not authenticated yet)
+    setTimeout(() => {
+        loadProductsFromFirebase();
+    }, 150);
+}
+
+function showProductMessage(message, type = 'success') {
+    const messageEl = document.getElementById('productFormMessage');
+    if (!messageEl) return;
+    messageEl.textContent = message;
+    messageEl.className = 'product-message active';
+    if (type) {
+        messageEl.classList.add(type);
+    }
+}
+
+function resetProductMessage() {
+    const messageEl = document.getElementById('productFormMessage');
+    if (messageEl) {
+        messageEl.textContent = '';
+        messageEl.className = 'product-message';
+    }
+}
+
+function resetProductImagePreview() {
+    const preview = document.getElementById('productImagePreview');
+    const imageInput = document.getElementById('productImage');
+    productImageData = { base64: '', fileName: '', fileType: '' };
+    if (preview) {
+        preview.innerHTML = '<span>No image selected</span>';
+    }
+    if (imageInput) {
+        imageInput.value = '';
+    }
+}
+
+async function handleProductImageChange(event) {
+    const file = event.target.files[0];
+    if (!file) return;
+
+    if (file.size > 5 * 1024 * 1024) {
+        showProductMessage('Image size should be less than 5 MB.', 'error');
+        event.target.value = '';
+        return;
+    }
+
+    try {
+        const base64 = await fileToBase64(file);
+        productImageData = {
+            base64,
+            fileName: file.name,
+            fileType: file.type
+        };
+
+        const preview = document.getElementById('productImagePreview');
+        if (preview) {
+            preview.innerHTML = `<img src="${base64}" alt="${file.name}">`;
+        }
+
+        showProductMessage('Image processed securely and ready to upload.', 'success');
+    } catch (error) {
+        console.error('Error converting product image:', error);
+        showProductMessage('Unable to process the image. Please try a different file.', 'error');
+    }
+}
+
+function escapeHTML(value = '') {
+    return String(value ?? '').replace(/[&<>"']/g, (char) => {
+        const entities = { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' };
+        return entities[char] || char;
+    });
+}
+
+function formatProductPrice(product) {
+    if (product && Number.isFinite(Number(product.priceValue))) {
+        const currency = product.priceCurrency || 'USD';
+        const amount = Number(product.priceValue).toLocaleString(undefined, { maximumFractionDigits: 2 });
+        return `${escapeHTML(currency)} ${amount}`;
+    }
+    return 'On request';
+}
+
+function formatProductDate(value) {
+    if (!value) return 'Recently updated';
+    try {
+        return new Date(value).toLocaleDateString();
+    } catch (error) {
+        return 'Recently updated';
+    }
+}
+
+async function handleProductSubmit(event) {
+    event.preventDefault();
+    resetProductMessage();
+
+    const user = auth?.currentUser;
+    if (!user || !database) {
+        showProductMessage('Please login to add products.', 'error');
+        return;
+    }
+
+    const submitBtn = document.getElementById('productSubmitBtn');
+    if (submitBtn) {
+        submitBtn.disabled = true;
+        submitBtn.textContent = 'Saving...';
+    }
+
+    const priceValueInput = document.getElementById('priceValue')?.value;
+    const parsedPrice = priceValueInput ? parseFloat(priceValueInput) : null;
+
+    const payload = {
+        name: document.getElementById('productName')?.value?.trim(),
+        category: document.getElementById('productCategory')?.value || '',
+        hsCode: document.getElementById('hsCodeLookup')?.value?.trim() || '',
+        targetMarkets: document.getElementById('targetMarkets')?.value?.trim() || '',
+        incoterm: document.getElementById('incoterm')?.value || '',
+        priceCurrency: document.getElementById('priceCurrency')?.value || 'USD',
+        priceValue: Number.isFinite(parsedPrice) ? parsedPrice : null,
+        minOrderQty: document.getElementById('minOrderQty')?.value?.trim() || '',
+        productionCapacity: document.getElementById('productionCapacity')?.value?.trim() || '',
+        leadTime: document.getElementById('leadTime')?.value?.trim() || '',
+        certifications: document.getElementById('certifications')?.value?.trim() || '',
+        complianceNotes: document.getElementById('complianceNotes')?.value?.trim() || '',
+        description: document.getElementById('productDescription')?.value?.trim(),
+        specs: document.getElementById('productSpecs')?.value?.trim() || '',
+        packagingDetails: document.getElementById('packagingDetails')?.value?.trim() || '',
+        image: productImageData.base64 || '',
+        imageFileName: productImageData.fileName || '',
+        imageFileType: productImageData.fileType || '',
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString()
+    };
+
+    if (!payload.name) {
+        showProductMessage('Product name is required.', 'error');
+        if (submitBtn) {
+            submitBtn.disabled = false;
+            submitBtn.textContent = 'Save Product';
+        }
+        return;
+    }
+
+    if (!payload.description) {
+        showProductMessage('Please add a short sales description.', 'error');
+        if (submitBtn) {
+            submitBtn.disabled = false;
+            submitBtn.textContent = 'Save Product';
+        }
+        return;
+    }
+
+    try {
+        const userProductsRef = database.ref(`users/${user.uid}/products`);
+        const productRef = userProductsRef.push();
+        const productId = productRef.key;
+
+        const userName = user.displayName || user.email || 'Exporter';
+        const catalogPayload = {
+            ...payload,
+            productId,
+            userId: user.uid,
+            exporterName: userName
+        };
+
+        await productRef.set(payload);
+        await syncProductCatalog(productId, catalogPayload);
+        showProductMessage('Product saved successfully.', 'success');
+        event.target.reset();
+        resetProductImagePreview();
+        await loadProductsFromFirebase();
+    } catch (error) {
+        console.error('Error saving product:', error);
+        showProductMessage('Failed to save product. Please try again.', 'error');
+    } finally {
+        if (submitBtn) {
+            submitBtn.disabled = false;
+            submitBtn.textContent = 'Save Product';
+        }
+    }
+}
+
+async function syncProductCatalog(productId, payload) {
+    if (!productId || !payload || !database) return;
+    try {
+        await database.ref(`productCatalog/${productId}`).set(payload);
+    } catch (error) {
+        console.warn('Product catalog sync skipped:', error?.code || error?.message || error);
+    }
+}
+
+async function loadProductsFromFirebase() {
+    const listEl = document.getElementById('productList');
+    const emptyEl = document.getElementById('productListEmpty');
+    const badgeEl = document.getElementById('productCountBadge');
+
+    if (!listEl || !emptyEl) return;
+
+    const user = auth?.currentUser;
+    if (!user || !database) {
+        listEl.innerHTML = '';
+        emptyEl.style.display = 'block';
+        emptyEl.innerHTML = '<p>Please login to manage your product catalog.</p>';
+        if (badgeEl) badgeEl.textContent = '0 items';
+        return;
+    }
+
+    listEl.innerHTML = '<div class="product-loading">Loading products...</div>';
+
+    try {
+        const snapshot = await database.ref(`users/${user.uid}/products`).once('value');
+        const data = snapshot.val() || {};
+
+        const products = Object.entries(data).map(([id, value]) => ({
+            id,
+            ...value
+        })).sort((a, b) => {
+            const dateA = new Date(a.updatedAt || a.createdAt || 0);
+            const dateB = new Date(b.updatedAt || b.createdAt || 0);
+            return dateB - dateA;
+        });
+
+        productsCache = products;
+        renderProductList(products);
+        if (badgeEl) {
+            badgeEl.textContent = `${products.length} ${products.length === 1 ? 'item' : 'items'}`;
+        }
+    } catch (error) {
+        console.error('Error loading products:', error);
+        listEl.innerHTML = '';
+        emptyEl.style.display = 'block';
+        emptyEl.innerHTML = '<p>Unable to load products right now. Please try again later.</p>';
+        if (badgeEl) badgeEl.textContent = '0 items';
+    }
+}
+
+function renderProductList(products = []) {
+    const listEl = document.getElementById('productList');
+    const emptyEl = document.getElementById('productListEmpty');
+    if (!listEl || !emptyEl) return;
+
+    if (!products.length) {
+        listEl.innerHTML = '';
+        emptyEl.style.display = 'block';
+        return;
+    }
+
+    emptyEl.style.display = 'none';
+
+    const randomId = () => Math.random().toString(36).substring(2, 9);
+
+    listEl.innerHTML = products
+        .map((product) => buildProductCard(product, {
+            summaryId: `productSummary-${product.id || randomId()}`,
+            contentId: `productContent-${product.id || randomId()}`,
+        }))
+        .join('');
+
+    const summaryToggles = listEl.querySelectorAll('.product-card-summary');
+    summaryToggles.forEach((summaryEl) => {
+        summaryEl.addEventListener('click', toggleProductContent);
+    });
+}
+
+function toggleProductContent(event) {
+    const summaryEl = event.currentTarget;
+    const cardEl = summaryEl.closest('.product-card');
+    const contentEl = cardEl?.querySelector('.product-card-content');
+    const iconEl = summaryEl.querySelector('.product-card-toggle-icon');
+
+    if (!contentEl) return;
+
+    const isExpanded = contentEl.classList.contains('active');
+    const nextState = !isExpanded;
+    contentEl.classList.toggle('active', nextState);
+    contentEl.hidden = !nextState;
+    summaryEl.setAttribute('aria-expanded', String(nextState));
+
+    if (iconEl) {
+        iconEl.classList.toggle('expanded', nextState);
+    }
+}
+
+async function deleteProduct(productId) {
+    if (!productId) return;
+
+    if (!confirm('Are you sure you want to delete this product?')) {
+        return;
+    }
+
+    const user = auth?.currentUser;
+    if (!user || !database) {
+        showProductMessage('Please login to manage products.', 'error');
+        return;
+    }
+
+    try {
+        await database.ref(`users/${user.uid}/products/${productId}`).remove();
+        await removeProductFromCatalog(productId);
+        showProductMessage('Product removed from your catalog.', 'success');
+        await loadProductsFromFirebase();
+    } catch (error) {
+        console.error('Error deleting product:', error);
+        showProductMessage('Unable to delete product. Please try again.', 'error');
+    }
+}
+
+async function removeProductFromCatalog(productId) {
+    if (!productId || !database) return;
+    try {
+        await database.ref(`productCatalog/${productId}`).remove();
+    } catch (error) {
+        console.warn('Product catalog removal skipped:', error?.code || error?.message || error);
+    }
+}
+
+function buildProductCard(product, ids = {}) {
+    const safeName = escapeHTML(product.name || 'Untitled Product');
+    const categoryLabel = escapeHTML(product.category || 'General');
+    const description = escapeHTML(product.description || 'No description shared.');
+    const price = formatProductPrice(product);
+    const incoterm = escapeHTML(product.incoterm ? product.incoterm.toUpperCase() : 'Flexible');
+    const moq = escapeHTML(product.minOrderQty || 'On request');
+    const capacity = escapeHTML(product.productionCapacity || 'Custom');
+    const leadTime = escapeHTML(product.leadTime || 'To be confirmed');
+    const hsCode = escapeHTML(product.hsCode || '—');
+    const packaging = escapeHTML(product.packagingDetails || 'Standard export-ready packaging available.');
+    const compliance = escapeHTML(product.complianceNotes || 'Complies with buyer / destination requirements.');
+    const updatedDate = formatProductDate(product.updatedAt || product.createdAt);
+
+    const specItems = parseListInput(product.specs);
+    const marketItems = parseListInput(product.targetMarkets);
+    const certificationItems = parseListInput(product.certifications);
+
+    const specListHtml = specItems.length ? `
+        <div class="product-card-section">
+            <h5>Key Specifications</h5>
+            <ul class="product-spec-list">
+                ${specItems.map(item => `<li>${escapeHTML(item)}</li>`).join('')}
+            </ul>
+        </div>
+    ` : '';
+
+    const marketChips = marketItems.length ? `
+        <div class="product-chip-group">
+            <span>Target Markets</span>
+            <div class="product-chip-wrapper">
+                ${marketItems.map(item => `<span class="product-chip">${escapeHTML(item)}</span>`).join('')}
+            </div>
+        </div>
+    ` : '';
+
+    const certificationChips = certificationItems.length ? `
+        <div class="product-chip-group">
+            <span>Certifications</span>
+            <div class="product-chip-wrapper">
+                ${certificationItems.map(item => `<span class="product-chip neutral">${escapeHTML(item)}</span>`).join('')}
+            </div>
+        </div>
+    ` : '';
+
+    const metrics = [
+        { label: 'HS Code', value: hsCode },
+        { label: 'Incoterm', value: incoterm },
+        { label: 'Price', value: price },
+        { label: 'MOQ', value: moq },
+        { label: 'Capacity', value: capacity },
+        { label: 'Lead Time', value: leadTime }
+    ];
+
+    const metricsHtml = metrics.map(metric => `
+        <div class="product-metric">
+            <span>${metric.label}</span>
+            <strong>${metric.value}</strong>
+        </div>
+    `).join('');
+
+    const summaryId = ids.summaryId || `productSummary-${product.id}`;
+    const contentId = ids.contentId || `productContent-${product.id}`;
+
+    return `
+        <article class="product-card" aria-labelledby="${summaryId}">
+            <div class="product-card-media">
+                ${product.image
+                    ? `<img src="${product.image}" alt="${safeName}">`
+                    : `<div class="product-card-placeholder">Image pending</div>`
+                }
+                <span class="product-card-badge">${categoryLabel}</span>
+            </div>
+            <button
+                id="${summaryId}"
+                class="product-card-summary"
+                aria-expanded="false"
+                aria-controls="${contentId}"
+            >
+                <div>
+                    <h4>${safeName}</h4>
+                    <p>${price}</p>
+                </div>
+                <span class="product-card-toggle-icon" aria-hidden="true"></span>
+            </button>
+
+            <div id="${contentId}" class="product-card-content" hidden>
+                <p class="product-card-subtitle">${description}</p>
+                <div class="product-card-info-grid">
+                    ${metricsHtml}
+                </div>
+                ${specListHtml}
+                ${marketChips}
+                ${certificationChips}
+                <div class="product-card-notes">
+                    <div class="product-card-note">
+                        <span>Packaging & Labelling</span>
+                        <p>${packaging}</p>
+                    </div>
+                    <div class="product-card-note">
+                        <span>Compliance Notes</span>
+                        <p>${compliance}</p>
+                    </div>
+                </div>
+                <div class="product-card-footer">
+                    <small>Updated ${updatedDate}</small>
+                    <div class="product-card-actions">
+                        <button type="button" class="product-card-action delete" onclick="deleteProduct('${product.id}')">
+                            Delete
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </article>
+    `;
+}
+
+function parseListInput(value = '') {
+    if (!value) return [];
+    return value
+        .split(/[\n,;•]+/)
+        .map(item => item.trim())
+        .filter(Boolean);
+}
+
+// ============================================
 // DOCUMENTS MODULE
 // ============================================
 
@@ -3478,7 +3946,7 @@ async function loadDocumentsFromFirebase() {
         const ekycData = ekycDoc && ekycDoc.exists ? ekycDoc.data() : null;
 
         const documents = [];
-
+        
         if (userData) {
             documents.push(...collectRealtimeDocuments(userData));
 
@@ -3510,7 +3978,7 @@ async function loadDocumentsFromFirebase() {
         if (ekycData) {
             documents.push(...collectFirestoreDocuments(ekycData));
         }
-        
+
         documentsCache = documents;
         
         if (documents.length === 0) {
@@ -3878,12 +4346,12 @@ document.addEventListener('keydown', (e) => {
     }
 });
 
-// Initialize documents module when insurance tab is opened
+// Initialize catalog modules after DOM is ready
 document.addEventListener('DOMContentLoaded', () => {
     setTimeout(() => {
         initializeDocumentsModule();
+        initializeProductModule();
         
-        // Load documents when insurance section is shown
         const originalSwitchTab = window.switchTab;
         window.switchTab = function(tabName) {
             originalSwitchTab(tabName);
@@ -3891,7 +4359,18 @@ document.addEventListener('DOMContentLoaded', () => {
             if (tabName === 'documents') {
                 loadDocumentsFromFirebase();
             }
+            
+            if (tabName === 'products') {
+                loadProductsFromFirebase();
+            }
         };
+        
+        const initialTab = window.location.hash.substring(1);
+        if (initialTab === 'documents') {
+            loadDocumentsFromFirebase();
+        } else if (initialTab === 'products') {
+            loadProductsFromFirebase();
+        }
     }, 100);
 });
 
