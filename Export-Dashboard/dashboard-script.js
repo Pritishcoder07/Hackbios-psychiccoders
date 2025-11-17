@@ -64,7 +64,9 @@ auth?.onAuthStateChanged((user) => {
         // Set up real-time listeners after auth is confirmed
         checkEKYCStatus();
         listenForEKYCStatusChanges();
+        ensureSupportChatListeners();
     } else {
+        detachSupportChatListeners();
         // User is not signed in, redirect to login
         window.location.href = '../index.html';
     }
@@ -3208,6 +3210,338 @@ function parseListInput(value = '') {
 }
 
 // ============================================
+// SUPPORT MODULE
+// ============================================
+
+const supportFaqData = [
+    {
+        question: 'How do I complete my eKYC?',
+        answer: 'Open the Documents tab and click “Complete eKYC”. Upload your Aadhaar/PAN/Passport along with business and bank proofs, then submit the video verification request.'
+    },
+    {
+        question: 'Which documents are required for Indian exporters?',
+        answer: 'Typically IEC certificate, GST certificate, PAN, address proof, bank letter/cancelled cheque, and any licenses specific to your product category.'
+    },
+    {
+        question: 'Which documents are required for international exporters?',
+        answer: 'Common documents include Certificate of Origin, commercial invoice, packing list, inspection certificates, insurance policy, and destination-specific compliance certificates.'
+    },
+    {
+        question: 'How to upload ID proof or business proof?',
+        answer: 'Go to the Profile modal → Compliance tab and upload the respective files. They are stored securely in Firebase with Base64 encoding.'
+    },
+    {
+        question: 'What is currency protection / forward contract?',
+        answer: 'Forward Contracts lock in an exchange rate for a future date so your export receivables aren’t impacted by FX fluctuations. See the Forward Contracts tab for details.'
+    },
+    {
+        question: 'How does QR shipment documentation work?',
+        answer: 'All shipment documents are digitised, stored against your account, and can be shared via QR codes with logistics partners for faster verification.'
+    },
+    {
+        question: 'How to track my shipment?',
+        answer: 'Use the Dashboard or Insurance tab to see live shipment milestones once tracking IDs are added. We send alerts for exceptions automatically.'
+    },
+    {
+        question: 'How to contact support?',
+        answer: 'Use this chat window or email support@globalguardexports.com. When an admin is online you can start a live session.'
+    }
+];
+
+const supportBotKnowledge = [
+    {
+        keywords: ['kyc', 'verification', 'video call', 'ekyc', 'id proof'],
+        answer: 'You can complete eKYC from the Documents tab. Upload Aadhaar/PAN/Passport plus business/bank proofs, submit for review, and request a video verification slot.'
+    },
+    {
+        keywords: ['document', 'upload', 'storage', 'where are my documents', 'doc'],
+        answer: 'All uploaded documents are stored securely in Firebase Realtime Database and appear inside your Document Library. You can preview, download, or delete them anytime.'
+    },
+    {
+        keywords: ['shipment', 'track', 'tracking'],
+        answer: 'Shipment tracking lives in the Dashboard insights and Insurance tab. Add your tracking IDs and we’ll surface live milestones plus risk alerts.'
+    },
+    {
+        keywords: ['forward contract', 'currency', 'fx', 'hedge'],
+        answer: 'A Forward Contract locks in an exchange rate for a future payout. Use the Forward Contracts tab to simulate rates and share details with your bank.'
+    },
+    {
+        keywords: ['insurance', 'risk', 'coverage'],
+        answer: 'Our Insurance panel compares marine policies, coverage adequacy, and appetite for your corridor. Complete the shipment questionnaire to get matched policies instantly.'
+    },
+    {
+        keywords: ['support', 'human', 'agent'],
+        answer: 'I am always available. If an admin agent is online you’ll also see “Chat with Admin (Live)” in this window for real-time help.'
+    }
+];
+
+let supportModuleInitialized = false;
+let supportMessagesQuery = null;
+let supportMessagesRendered = new Set();
+let supportMessagesCurrentUserId = null;
+let supportAdminStatusUnsub = null;
+let supportAdminOnline = false;
+let supportLastAdminStatus = null;
+let supportBotTypingTimer = null;
+
+function initializeSupportModule() {
+    if (!supportModuleInitialized) {
+        const form = document.getElementById('supportChatForm');
+        const input = document.getElementById('supportMessageInput');
+        if (!form || !input) return;
+
+        form.addEventListener('submit', handleSupportFormSubmit);
+        input.addEventListener('keydown', (event) => {
+            if (event.key === 'Enter' && !event.shiftKey) {
+                event.preventDefault();
+                handleSupportFormSubmit(event);
+            }
+        });
+
+        renderSupportFaq();
+        listenForSupportAdminStatus();
+        supportModuleInitialized = true;
+    }
+
+    ensureSupportChatListeners();
+}
+
+function listenForSupportAdminStatus() {
+    if (!database) return;
+    if (supportAdminStatusUnsub) {
+        supportAdminStatusUnsub();
+        supportAdminStatusUnsub = null;
+    }
+
+    const statusRef = database.ref('supportStatus/admin');
+    const handleStatusValue = (snapshot) => {
+        const data = snapshot.val() || {};
+        const isOnline = data.status === 'online';
+        updateSupportAdminStatus(isOnline);
+    };
+
+    statusRef.on('value', handleStatusValue, (error) => {
+        console.error('Support status listener error:', error);
+    });
+
+    supportAdminStatusUnsub = () => statusRef.off('value', handleStatusValue);
+}
+
+function updateSupportAdminStatus(isOnline) {
+    supportAdminOnline = !!isOnline;
+    const statusIndicator = document.getElementById('supportStatusIndicator');
+    const statusLabel = document.getElementById('supportStatusLabel');
+    const liveBadge = document.getElementById('supportLiveBadge');
+    const liveBadgeText = document.getElementById('supportLiveBadgeText');
+
+    if (statusIndicator && statusLabel) {
+        const dot = statusIndicator.querySelector('.status-dot');
+        statusLabel.textContent = isOnline ? 'Admin Online · Live chat available' : 'Admin Offline · Bot assisting';
+        if (dot) {
+            dot.classList.toggle('online', isOnline);
+        }
+    }
+
+    if (liveBadge && liveBadgeText) {
+        liveBadge.classList.toggle('live', isOnline);
+        liveBadgeText.textContent = isOnline ? 'Admin Live' : 'Bot Assisting';
+    }
+
+    const helperText = document.getElementById('supportChatHelperText');
+    if (helperText) {
+        helperText.textContent = isOnline
+            ? 'Admin is online — your messages will reach our agent in real time.'
+            : 'Admin is currently offline. Our support bot will assist you.';
+    }
+
+    if (supportLastAdminStatus !== null && supportLastAdminStatus && !isOnline) {
+        appendSupportSystemMessage('Admin is currently offline. Our support bot will assist you.');
+    }
+    supportLastAdminStatus = isOnline;
+}
+
+async function ensureSupportChatListeners() {
+    const user = auth?.currentUser;
+    if (!user || !database) return;
+    if (supportMessagesCurrentUserId === user.uid && supportMessagesQuery) return;
+    await listenForSupportMessages();
+}
+
+async function listenForSupportMessages() {
+    const user = auth?.currentUser;
+    if (!user || !database) return;
+
+    if (supportMessagesQuery) {
+        supportMessagesQuery.off();
+        supportMessagesQuery = null;
+    }
+    supportMessagesRendered.clear();
+    supportMessagesCurrentUserId = user.uid;
+
+    const messagesRef = database.ref(`supportChat/${user.uid}/messages`);
+    const snapshot = await messagesRef.once('value');
+    if (!snapshot.exists()) {
+        await pushSupportMessage('bot', 'Hi! I’m your support assistant. How can I help you today?');
+    }
+
+    supportMessagesQuery = messagesRef.limitToLast(200);
+    supportMessagesQuery.on('child_added', (childSnapshot) => {
+        const message = childSnapshot.val();
+        const messageId = childSnapshot.key;
+        if (!messageId || supportMessagesRendered.has(messageId)) return;
+        supportMessagesRendered.add(messageId);
+        appendSupportMessage({ id: messageId, ...message });
+    });
+}
+
+async function handleSupportFormSubmit(event) {
+    event.preventDefault();
+    const input = document.getElementById('supportMessageInput');
+    if (!input) return;
+
+    const text = input.value.trim();
+    if (!text) return;
+
+    input.value = '';
+    await pushSupportMessage('user', text);
+
+    if (!supportAdminOnline) {
+        queueSupportBotResponse(text);
+    }
+}
+
+async function pushSupportMessage(sender, text) {
+    const user = auth?.currentUser;
+    if (!user || !database) return;
+    const messageRef = database.ref(`supportChat/${user.uid}/messages`).push();
+    await messageRef.set({
+        sender,
+        text,
+        timestamp: firebase.database.ServerValue.TIMESTAMP
+    });
+}
+
+function appendSupportMessage(message) {
+    const container = document.getElementById('supportMessages');
+    if (!container || !message) return;
+
+    const wrap = document.createElement('div');
+    wrap.className = `support-message ${message.sender || 'system'}`;
+
+    const bubble = document.createElement('div');
+    bubble.className = 'support-bubble';
+    bubble.textContent = message.text || '';
+    wrap.appendChild(bubble);
+
+    const timestamp = document.createElement('small');
+    const date = message.timestamp
+        ? new Date(message.timestamp)
+        : new Date();
+    timestamp.textContent = date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+    wrap.appendChild(timestamp);
+
+    container.appendChild(wrap);
+    container.scrollTop = container.scrollHeight;
+}
+
+function appendSupportSystemMessage(text) {
+    const container = document.getElementById('supportMessages');
+    if (!container) return;
+
+    const wrap = document.createElement('div');
+    wrap.className = 'support-message bot';
+    const bubble = document.createElement('div');
+    bubble.className = 'support-bubble';
+    bubble.textContent = text;
+    wrap.appendChild(bubble);
+    container.appendChild(wrap);
+    container.scrollTop = container.scrollHeight;
+}
+
+function queueSupportBotResponse(userQuery) {
+    showSupportBotTyping(true);
+    const response = getSupportBotResponse(userQuery);
+    const delay = Math.min(Math.max(userQuery.length * 30, 600), 2000);
+
+    if (supportBotTypingTimer) {
+        clearTimeout(supportBotTypingTimer);
+    }
+
+    supportBotTypingTimer = setTimeout(async () => {
+        showSupportBotTyping(false);
+        await pushSupportMessage('bot', response);
+    }, delay);
+}
+
+function getSupportBotResponse(query = '') {
+    const normalized = query.toLowerCase();
+    const knowledge = supportBotKnowledge.find(entry =>
+        entry.keywords.some(keyword => normalized.includes(keyword))
+    );
+
+    if (knowledge) {
+        return knowledge.answer;
+    }
+
+    return 'I’ve shared this with our team. In the meantime, you can explore the FAQs or provide more details so I can assist better!';
+}
+
+function showSupportBotTyping(isTyping) {
+    const typingEl = document.getElementById('supportBotTyping');
+    if (!typingEl) return;
+    typingEl.style.display = isTyping ? 'flex' : 'none';
+}
+
+function detachSupportChatListeners() {
+    if (supportMessagesQuery) {
+        supportMessagesQuery.off();
+        supportMessagesQuery = null;
+    }
+    supportMessagesRendered.clear();
+    supportMessagesCurrentUserId = null;
+    if (supportAdminStatusUnsub) {
+        supportAdminStatusUnsub();
+        supportAdminStatusUnsub = null;
+    }
+}
+
+function renderSupportFaq() {
+    const container = document.getElementById('supportFaqList');
+    if (!container) return;
+    container.innerHTML = '';
+
+    supportFaqData.forEach((faq, index) => {
+        const item = document.createElement('div');
+        item.className = 'support-faq-item';
+
+        const button = document.createElement('button');
+        button.className = 'support-faq-trigger';
+        button.type = 'button';
+        button.setAttribute('aria-expanded', 'false');
+        button.innerHTML = `
+            <span>${faq.question}</span>
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <polyline points="6 9 12 15 18 9"></polyline>
+            </svg>
+        `;
+
+        const answer = document.createElement('div');
+        answer.className = 'support-faq-answer';
+        answer.textContent = faq.answer;
+
+        button.addEventListener('click', () => {
+            const isOpen = answer.classList.toggle('active');
+            button.classList.toggle('active', isOpen);
+            button.setAttribute('aria-expanded', String(isOpen));
+        });
+
+        item.appendChild(button);
+        item.appendChild(answer);
+        container.appendChild(item);
+    });
+}
+
+// ============================================
 // ANALYTICS MODULE
 // ============================================
 
@@ -4614,6 +4948,7 @@ document.addEventListener('DOMContentLoaded', () => {
         initializeDocumentsModule();
         initializeProductModule();
         initializeAnalyticsModule();
+        initializeSupportModule();
         
         const originalSwitchTab = window.switchTab;
         window.switchTab = function(tabName) {
@@ -4630,6 +4965,11 @@ document.addEventListener('DOMContentLoaded', () => {
             if (tabName === 'analytics') {
                 loadAnalyticsFromFirebase();
             }
+
+            if (tabName === 'support') {
+                initializeSupportModule();
+                listenForSupportMessages();
+            }
         };
         
         const initialTab = window.location.hash.substring(1);
@@ -4639,6 +4979,8 @@ document.addEventListener('DOMContentLoaded', () => {
             loadProductsFromFirebase();
         } else if (initialTab === 'analytics') {
             loadAnalyticsFromFirebase();
+        } else if (initialTab === 'support') {
+            initializeSupportModule();
         }
     }, 100);
 });

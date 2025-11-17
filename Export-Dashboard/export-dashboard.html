@@ -722,8 +722,54 @@
                 </div>
 
                 <div class="content-section" id="supportSection" style="display: none;">
-                    <h2>Support</h2>
-                    <p>Get help and support for your exports.</p>
+                    <div class="support-header">
+                        <div>
+                            <h2>Support Center</h2>
+                            <p>Your unified space for instant answers, live assistance, and FAQs.</p>
+                        </div>
+                        <div class="support-status-indicator" id="supportStatusIndicator">
+                            <span class="status-dot offline"></span>
+                            <span id="supportStatusLabel">Checking agent availability...</span>
+                        </div>
+                    </div>
+
+                    <div class="support-layout">
+                        <section class="support-chat-panel">
+                            <div class="support-chat-header">
+                                <div>
+                                    <h3>Smart Support Chat</h3>
+                                    <p id="supportChatHelperText">Hi! I’m your support assistant. How can I help you today?</p>
+                                </div>
+                                <button type="button" class="support-pill" id="supportLiveBadge" disabled>
+                                    <span class="pill-dot"></span>
+                                    <span id="supportLiveBadgeText">Bot Assisting</span>
+                                </button>
+                            </div>
+                            <div class="support-chat-window" id="supportChatWindow">
+                                <div class="support-chat-messages" id="supportMessages"></div>
+                                <div class="support-chat-typing" id="supportBotTyping" style="display: none;">
+                                    <span></span><span></span><span></span>
+                                </div>
+                            </div>
+                            <form id="supportChatForm" class="support-chat-input" autocomplete="off">
+                                <input type="text" id="supportMessageInput" placeholder="Type your message..." aria-label="Message support" autocomplete="off">
+                                <button type="submit">
+                                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                        <line x1="22" y1="2" x2="11" y2="13"></line>
+                                        <polygon points="22 2 15 22 11 13 2 9 22 2"></polygon>
+                                    </svg>
+                                </button>
+                            </form>
+                        </section>
+
+                        <section class="support-faq-panel">
+                            <div class="support-faq-header">
+                                <h3>FAQs & Quick Answers</h3>
+                                <p>Tap a question to expand.</p>
+                            </div>
+                            <div class="support-faq-accordion" id="supportFaqList"></div>
+                        </section>
+                    </div>
                 </div>
             </main>
         </div>

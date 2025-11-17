@@ -102,6 +102,38 @@
                     </div>
                 </div>
             </section>
+
+            <!-- Support Center -->
+            <section class="admin-section">
+                <div class="support-admin-header">
+                    <h2>Support Center</h2>
+                    <label class="admin-status-toggle">
+                        <input type="checkbox" id="adminSupportToggle">
+                        <span class="toggle-track">
+                            <span class="toggle-thumb"></span>
+                        </span>
+                        <span id="adminSupportStatusLabel">Offline</span>
+                    </label>
+                </div>
+                <div class="admin-support-layout">
+                    <aside class="admin-support-threads" id="adminSupportThreadList">
+                        <div class="empty-state">No support conversations yet</div>
+                    </aside>
+                    <div class="admin-support-chat">
+                        <div class="admin-support-chat-header">
+                            <div>
+                                <h3 id="adminSupportChatUser">Select a conversation</h3>
+                                <p id="adminSupportChatInfo">Messages appear here in real time.</p>
+                            </div>
+                        </div>
+                        <div class="admin-support-chat-window" id="adminSupportMessages"></div>
+                        <form id="adminSupportForm" class="admin-support-input" autocomplete="off">
+                            <input type="text" id="adminSupportInput" placeholder="Type a reply..." autocomplete="off" disabled>
+                            <button type="submit" disabled>Send</button>
+                        </form>
+                    </div>
+                </div>
+            </section>
         </main>
     </div>
 

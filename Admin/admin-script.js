@@ -148,6 +148,7 @@ function updateAuthStatus(isConnected, message) {
 
 function initializeAdminPanel() {
     listenForVideoCallRequests();
+    initializeAdminSupportCenter();
 }
 
 /**
@@ -177,6 +178,210 @@ function listenForVideoCallRequests() {
         }, (error) => {
             console.error('Error listening for video call requests:', error);
         });
+}
+
+// ============================================
+// SUPPORT CENTER MODULE
+// ============================================
+
+let adminSupportStatusUnsub = null;
+let adminSupportThreadsRef = null;
+let adminSupportMessagesRef = null;
+let adminCurrentSupportUserId = null;
+
+function initializeAdminSupportCenter() {
+    setupSupportStatusToggle();
+    setupAdminSupportForm();
+    listenForSupportThreads();
+}
+
+function setupSupportStatusToggle() {
+    if (!database) return;
+    const toggle = document.getElementById('adminSupportToggle');
+    const label = document.getElementById('adminSupportStatusLabel');
+    if (!toggle || !label) return;
+
+    const statusRef = database.ref('supportStatus/admin');
+
+    toggle.addEventListener('change', async () => {
+        const status = toggle.checked ? 'online' : 'offline';
+        try {
+            await statusRef.update({
+                status,
+                updatedAt: firebase.database.ServerValue.TIMESTAMP
+            });
+            label.textContent = status === 'online' ? 'Online' : 'Offline';
+            setAdminSupportFormState(toggle.checked && Boolean(adminCurrentSupportUserId));
+        } catch (error) {
+            console.error('Unable to update support status:', error);
+            toggle.checked = !toggle.checked; // revert
+        }
+    });
+
+    if (adminSupportStatusUnsub) {
+        adminSupportStatusUnsub();
+    }
+
+    const handleStatusSnapshot = (snapshot) => {
+        const data = snapshot.val() || {};
+            const isOnline = data.status === 'online';
+            toggle.checked = isOnline;
+            label.textContent = isOnline ? 'Online' : 'Offline';
+            setAdminSupportFormState(isOnline && Boolean(adminCurrentSupportUserId));
+    };
+
+    statusRef.on('value', handleStatusSnapshot, (error) => {
+        console.error('Support status listener error:', error);
+    });
+
+    adminSupportStatusUnsub = () => statusRef.off('value', handleStatusSnapshot);
+}
+
+function listenForSupportThreads() {
+    if (!database) return;
+    const listEl = document.getElementById('adminSupportThreadList');
+    if (!listEl) return;
+
+    if (adminSupportThreadsRef) adminSupportThreadsRef.off();
+
+    adminSupportThreadsRef = database.ref('supportChat');
+    adminSupportThreadsRef.on('value', (snapshot) => {
+        if (!snapshot.exists()) {
+            listEl.innerHTML = '<div class="empty-state">No support conversations yet</div>';
+            return;
+        }
+
+        const threads = [];
+        snapshot.forEach((child) => {
+            const userId = child.key;
+            const messages = child.child('messages').val();
+            if (!messages) return;
+            const entries = Object.values(messages).sort((a, b) => (a.timestamp || 0) - (b.timestamp || 0));
+            const last = entries[entries.length - 1];
+            threads.push({
+                userId,
+                lastMessage: last?.text || '',
+                timestamp: last?.timestamp || Date.now()
+            });
+        });
+
+        if (!threads.length) {
+            listEl.innerHTML = '<div class="empty-state">No support conversations yet</div>';
+            return;
+        }
+
+        threads.sort((a, b) => b.timestamp - a.timestamp);
+        listEl.innerHTML = threads.map(thread => `
+            <div class="admin-support-thread ${thread.userId === adminCurrentSupportUserId ? 'active' : ''}" data-user-id="${thread.userId}">
+                <h4>User: ${thread.userId.slice(0, 6)}...</h4>
+                <p>${thread.lastMessage}</p>
+            </div>
+        `).join('');
+
+        listEl.querySelectorAll('.admin-support-thread').forEach((item) => {
+            item.addEventListener('click', () => {
+                selectSupportThread(item.getAttribute('data-user-id'));
+            });
+        });
+    });
+}
+
+function selectSupportThread(userId) {
+    if (!userId) return;
+    adminCurrentSupportUserId = userId;
+    const titleEl = document.getElementById('adminSupportChatUser');
+    const infoEl = document.getElementById('adminSupportChatInfo');
+    if (titleEl) titleEl.textContent = `Conversation with ${userId}`;
+    if (infoEl) infoEl.textContent = 'Replies sync instantly with the exporter.';
+
+    document.querySelectorAll('.admin-support-thread').forEach((item) => {
+        item.classList.toggle('active', item.getAttribute('data-user-id') === userId);
+    });
+
+    loadSupportConversation(userId);
+    const toggle = document.getElementById('adminSupportToggle');
+    setAdminSupportFormState(Boolean(toggle?.checked));
+}
+
+function loadSupportConversation(userId) {
+    if (!database || !userId) return;
+    const messagesEl = document.getElementById('adminSupportMessages');
+    if (!messagesEl) return;
+    messagesEl.innerHTML = '';
+
+    if (adminSupportMessagesRef) adminSupportMessagesRef.off();
+
+    adminSupportMessagesRef = database.ref(`supportChat/${userId}/messages`).limitToLast(200);
+    adminSupportMessagesRef.on('child_added', (snapshot) => {
+        appendAdminSupportMessage(snapshot.val());
+    });
+}
+
+function appendAdminSupportMessage(message = {}) {
+    const messagesEl = document.getElementById('adminSupportMessages');
+    if (!messagesEl) return;
+
+    const wrapper = document.createElement('div');
+    wrapper.className = `admin-support-message ${message.sender || 'user'}`;
+    const bubble = document.createElement('div');
+    bubble.className = 'bubble';
+    bubble.textContent = message.text || '';
+    wrapper.appendChild(bubble);
+
+    if (message.timestamp) {
+        const small = document.createElement('small');
+        small.textContent = new Date(message.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+        wrapper.appendChild(small);
+    }
+
+    messagesEl.appendChild(wrapper);
+    messagesEl.scrollTop = messagesEl.scrollHeight;
+}
+
+function setupAdminSupportForm() {
+    const form = document.getElementById('adminSupportForm');
+    if (!form) return;
+
+    form.addEventListener('submit', async (event) => {
+        event.preventDefault();
+        await sendAdminSupportMessage();
+    });
+}
+
+async function sendAdminSupportMessage() {
+    const userId = adminCurrentSupportUserId;
+    if (!userId || !database) return;
+    const input = document.getElementById('adminSupportInput');
+    const button = document.querySelector('#adminSupportForm button');
+    if (!input || !button) return;
+
+    const text = input.value.trim();
+    if (!text) return;
+
+    input.value = '';
+    button.disabled = true;
+
+    try {
+        const messageRef = database.ref(`supportChat/${userId}/messages`).push();
+        await messageRef.set({
+            sender: 'admin',
+            text,
+            timestamp: firebase.database.ServerValue.TIMESTAMP
+        });
+    } catch (error) {
+        console.error('Error sending support message:', error);
+        alert('Unable to send message. Please try again.');
+    } finally {
+        button.disabled = false;
+    }
+}
+
+function setAdminSupportFormState(enabled) {
+    const input = document.getElementById('adminSupportInput');
+    const button = document.querySelector('#adminSupportForm button');
+    if (!input || !button) return;
+    input.disabled = !enabled;
+    button.disabled = !enabled;
 }
 
 /**
